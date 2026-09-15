@@ -73,14 +73,14 @@ function setScenarioView(focused, scroll = false) {
   $("#scenario-index-toggle").classList.toggle("hidden", !focused);
   renderScenarioLibrary();
   if (!focused) {
-    $("#scenario-eyebrow").textContent = "WHO LET THE AGENTS ACT · AGENT SECURITY LABS";
+    $("#scenario-eyebrow").textContent = "WHO LET THE AGENTS ACT · LABS FOR SECURING AI AGENTS";
     $("#title").textContent = "Find the boundary that breaks";
     $("#summary").textContent = "Explore nine realistic agent-security failures, then compare how prompt instructions, model behavior, and application controls change the outcome.";
     $("#scenario-context").textContent = "";
     $("#severity").classList.add("hidden");
     $("#scenario-select").value = "";
     updateLandingDatabaseStatus();
-    document.title = "Who Let the Agents Act - Agent Security Labs";
+    document.title = "Who Let the Agents Act - Labs for Securing AI Agents";
   } else {
     $("#severity").classList.remove("hidden");
   }

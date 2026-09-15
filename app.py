@@ -38,7 +38,7 @@ PUBLIC_SITE_ROOT = "https://rewanthtammana.com/who-let-the-agents-act"
 PUBLIC_ASSET_ORIGIN = "https://who-let-the-agents-act.rewanthtammana.com"
 PUBLIC_APP_BASE_PATH = os.getenv("PUBLIC_APP_BASE_PATH", "/who-let-the-agents-act")
 APP_STYLESHEET_VERSION = "20260915-mobile-console2"
-APP_SCRIPT_VERSION = "20260915-basepath1"
+APP_SCRIPT_VERSION = "20260915-securing-agents1"
 BLOG_ASSET_VERSION = "20260915-share4"
 SITE_HEADER_ASSET_VERSION = "20260915-unified1"
 GITHUB_CALLOUT_ASSET_VERSION = "20260915-callout6"
@@ -493,7 +493,7 @@ def render_initial_page(template: str, request: Request, scenario_config: dict[s
     if scenario_config is None:
         values = {
             "__APP_BODY_CLASS__": "scenario-index-page",
-            "__INITIAL_SCENARIO_EYEBROW__": "WHO LET THE AGENTS ACT · AGENT SECURITY LABS",
+            "__INITIAL_SCENARIO_EYEBROW__": "WHO LET THE AGENTS ACT · LABS FOR SECURING AI AGENTS",
             "__INITIAL_TITLE__": "Find the boundary that breaks",
             "__INITIAL_SUMMARY__": "Explore nine realistic agent-security failures, then compare how prompt instructions, model behavior, and application controls change the outcome.",
             "__INITIAL_SCENARIO_CONTEXT__": "",
