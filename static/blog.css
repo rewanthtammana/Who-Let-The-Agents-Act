@@ -133,6 +133,9 @@ a { color: inherit; }
 .theme-toggle:focus-visible,
 .primary-action:focus-visible,
 .text-action:focus-visible,
+.share-trigger:focus-visible,
+.share-panel a:focus-visible,
+.share-panel button:focus-visible,
 .chapter-link:focus-visible,
 .docs-brand:focus-visible,
 .docs-topbar nav a:focus-visible,
@@ -190,6 +193,99 @@ a { color: inherit; }
 }
 .guide-intro p:last-child {
   margin-bottom: 0;
+}
+.guide-share {
+  margin-top: 20px;
+}
+
+/* Reader Share Menu */
+.share-menu {
+  position: relative;
+  width: fit-content;
+}
+.share-trigger {
+  min-height: 32px;
+  padding: 6px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  color: var(--muted);
+  background: transparent;
+  font: 600 0.6875rem "DM Mono", monospace;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  list-style: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
+}
+.share-trigger::-webkit-details-marker {
+  display: none;
+}
+.share-trigger::after {
+  content: "+";
+  color: var(--green);
+  font-size: 0.875rem;
+  line-height: 1;
+  transition: transform var(--transition-fast);
+}
+.share-menu[open] .share-trigger,
+.share-trigger:hover {
+  color: var(--ink);
+  border-bottom-color: var(--green);
+  background: transparent;
+}
+.share-menu[open] .share-trigger::after {
+  transform: rotate(45deg);
+}
+.share-panel {
+  min-width: 190px;
+  padding: 6px;
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  display: grid;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  box-shadow: 0 10px 26px rgba(17, 19, 17, 0.12);
+}
+.guide-share .share-panel {
+  right: auto;
+  left: 0;
+}
+.share-panel a,
+.share-panel button {
+  min-height: 34px;
+  width: 100%;
+  padding: 8px 9px;
+  display: flex;
+  align-items: center;
+  border: 0;
+  border-radius: var(--radius-xs);
+  color: var(--ink);
+  background: transparent;
+  font: 600 0.6875rem "DM Mono", monospace;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.share-panel a:hover,
+.share-panel button:hover {
+  color: var(--green);
+  background: var(--panel-subtle);
+}
+.share-status {
+  min-height: 18px;
+  padding: 2px 10px 0;
+  color: var(--muted);
+  font: 500 0.625rem "DM Mono", monospace;
 }
 
 /* Principles Cards */
@@ -489,6 +585,12 @@ a { color: inherit; }
 .article-header {
   padding: 48px 0 42px;
   border-bottom: 1px solid var(--line);
+}
+.article-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
 }
 .article-meta {
   display: flex;
@@ -1386,6 +1488,9 @@ blockquote {
   .guide-intro {
     max-width: 700px;
   }
+  .article-header-top {
+    align-items: flex-start;
+  }
   .post-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -1528,6 +1633,10 @@ blockquote {
   .guide-intro {
     padding-left: 16px;
   }
+  .guide-share .share-panel {
+    left: 0;
+    right: auto;
+  }
   .principles {
     grid-template-columns: 1fr;
     margin-bottom: 48px;
@@ -1556,6 +1665,14 @@ blockquote {
   }
   .article-header {
     padding-top: 28px;
+  }
+  .article-header-top {
+    display: grid;
+    gap: 14px;
+  }
+  .article-header .share-panel {
+    left: 0;
+    right: auto;
   }
   .article-header h1 {
     font-size: clamp(2.2rem, 10vw, 3.2rem);
@@ -1675,7 +1792,8 @@ blockquote {
   .principles article,
   .primary-action,
   .theme-toggle,
-  .text-action {
+  .text-action,
+  .share-trigger {
     transition: none !important;
     transform: none !important;
   }
@@ -1730,4 +1848,14 @@ html[data-theme="dark"] .primary-action {
 html[data-theme="dark"] .primary-action:hover {
   color: #071b13;
   background: var(--green);
+}
+html[data-theme="dark"] .share-trigger,
+html[data-theme="dark"] .share-panel {
+  background: var(--panel);
+}
+html[data-theme="dark"] .share-trigger:hover,
+html[data-theme="dark"] .share-menu[open] .share-trigger,
+html[data-theme="dark"] .share-panel a:hover,
+html[data-theme="dark"] .share-panel button:hover {
+  background: var(--panel-subtle);
 }

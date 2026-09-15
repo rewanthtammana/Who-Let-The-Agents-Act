@@ -14,6 +14,55 @@ function severityClass(severity) {
   return String(severity).toLowerCase() === "critical" ? "critical" : "high";
 }
 
+function canonicalPageUrl(fallbackPath) {
+  const canonical = document.querySelector('link[rel="canonical"]')?.href;
+  if (canonical) return canonical;
+  return new URL(appLink(fallbackPath), window.location.origin).href;
+}
+
+function renderShareMenu({ title, description, path, compact = false }) {
+  const url = canonicalPageUrl(path);
+  const xText = `Worth reading: ${title}\n\n${description}\n`;
+  const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&summary=${encodeURIComponent(description)}`;
+  const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(xText)}&url=${encodeURIComponent(url)}`;
+  return `<details class="share-menu ${compact ? "compact" : ""}">
+    <summary class="share-trigger"><span>Share</span></summary>
+    <div class="share-panel">
+      <button type="button" aria-label="Copy page link" data-share-copy="${encodeURIComponent(url)}">Copy link</button>
+      <a href="${escapeHtml(linkedinUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn">Share on LinkedIn</a>
+      <a href="${escapeHtml(xUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Share on X">Share on X</a>
+      <span class="share-status" aria-live="polite"></span>
+    </div>
+  </details>`;
+}
+
+function setupShareMenus() {
+  document.querySelectorAll("[data-share-copy]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const value = decodeURIComponent(button.dataset.shareCopy || "");
+      const status = button.closest(".share-panel")?.querySelector(".share-status");
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(value);
+        } else {
+          const textarea = document.createElement("textarea");
+          textarea.value = value;
+          textarea.setAttribute("readonly", "");
+          textarea.style.position = "fixed";
+          textarea.style.opacity = "0";
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          textarea.remove();
+        }
+        if (status) status.textContent = "Copied";
+      } catch {
+        if (status) status.textContent = "Copy failed";
+      }
+    });
+  });
+}
+
 function renderIndex(posts) {
   document.title = "Who Let the Agents Act - Field Guide";
   root.innerHTML = `
@@ -25,6 +74,12 @@ function renderIndex(posts) {
       <div class="guide-intro">
         <p>Who Let the Agents Act is a hands-on guide to security failures that appear when models can choose data, tools, targets, and follow-up actions.</p>
         <p>Each chapter begins with the vulnerable path, tests a prompt-only defense, then moves the boundary into application code where it can be enforced and evidenced.</p>
+        <div class="guide-share">${renderShareMenu({
+          title: "Who Let the Agents Act",
+          description: "An interactive field guide on agentic AI security, with realistic failure modes and vulnerable vs hardened controls.",
+          path: "/blog",
+          compact: true,
+        })}</div>
       </div>
     </section>
 
@@ -56,6 +111,7 @@ function renderIndex(posts) {
       }).join("")}
     </div>
     <aside class="safety-note"><strong>Educational use only.</strong> Vulnerable and prompt-only modes intentionally expose synthetic data or execute simulated side effects. Never connect them to production systems.</aside>`;
+  setupShareMenus();
 }
 
 function renderList(items, ordered = false) {
@@ -231,7 +287,15 @@ function renderArticle(post, posts) {
           <nav aria-label="On this page">${renderTocLinks(post, hasPrimer)}</nav>
         </details>
         <header class="article-header">
-          <div class="article-meta"><span>${escapeHtml(post.domain)}</span><span>${escapeHtml(post.category)}</span><span class="severity ${severityClass(post.severity)}">${escapeHtml(post.severity)}</span></div>
+          <div class="article-header-top">
+            <div class="article-meta"><span>${escapeHtml(post.domain)}</span><span>${escapeHtml(post.category)}</span><span class="severity ${severityClass(post.severity)}">${escapeHtml(post.severity)}</span></div>
+            ${renderShareMenu({
+              title: post.title,
+              description: post.dek,
+              path: post.url,
+              compact: true,
+            })}
+          </div>
           <h1>${escapeHtml(post.title)}</h1>
           <p class="dek">${escapeHtml(post.dek)}</p>
           <a class="primary-action" href="${escapeHtml(appLink(post.lab_url))}">Open this scenario in the lab <span>→</span></a>
@@ -352,6 +416,7 @@ function renderArticle(post, posts) {
     </div>`;
   setupScreenshotLightbox();
   setupArticleNavigation();
+  setupShareMenus();
 }
 
 async function initialize() {
