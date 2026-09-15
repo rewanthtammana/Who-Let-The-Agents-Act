@@ -1,0 +1,76 @@
+services:
+  who-let-the-agents-act:
+    build:
+      context: .
+    working_dir: /workspace
+    command: python run.py
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8000
+      RELOAD: "false"
+      GROQ_API_KEYS: ${GROQ_API_KEYS:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
+      COOKIE_SECURE: ${COOKIE_SECURE:-0}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      RUN_RATE_LIMIT_PER_MINUTE: ${RUN_RATE_LIMIT_PER_MINUTE:-100}
+      RUN_MAX_CONCURRENT_PER_IP: ${RUN_MAX_CONCURRENT_PER_IP:-5}
+      RUN_SUSTAINED_RATE_MINUTES: ${RUN_SUSTAINED_RATE_MINUTES:-5}
+      RUN_ABUSE_BLOCK_MINUTES: ${RUN_ABUSE_BLOCK_MINUTES:-15}
+      UPLOAD_RATE_LIMIT_PER_MINUTE: ${UPLOAD_RATE_LIMIT_PER_MINUTE:-10}
+      MODEL_MAX_ATTEMPTS_PER_RUN: ${MODEL_MAX_ATTEMPTS_PER_RUN:-4}
+      MODEL_DAILY_CALL_LIMIT: ${MODEL_DAILY_CALL_LIMIT:-10000}
+      MODEL_TIMEOUT_SECONDS: ${MODEL_TIMEOUT_SECONDS:-45}
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-0}
+      SESSION_TTL_SECONDS: ${SESSION_TTL_SECONDS:-1800}
+      GITHUB_REPO: ${GITHUB_REPO:-rewanthtammana/who-let-the-agents-act}
+      GITHUB_REPO_URL: ${GITHUB_REPO_URL:-https://github.com/rewanthtammana/who-let-the-agents-act}
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    networks: [app]
+    volumes:
+      - .:/workspace
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - who-let-the-agents-act_caddy_data:/data
+      - who-let-the-agents-act_caddy_config:/config
+    depends_on:
+      who-let-the-agents-act:
+        condition: service_healthy
+    networks: [app]
+    restart: unless-stopped
+
+networks:
+  app:
+    name: who-let-the-agents-act_app
+
+volumes:
+  who-let-the-agents-act_caddy_data:
+    name: who-let-the-agents-act_caddy_data
+    external: true
+  who-let-the-agents-act_caddy_config:
+    name: who-let-the-agents-act_caddy_config
+    external: true

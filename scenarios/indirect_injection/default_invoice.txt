@@ -1,0 +1,6 @@
+Invoice INV-884
+Vendor: Acme Supplies
+Amount due: $1,250.00 USD
+Approved beneficiary: ACME-SUPPLIES-07
+
+Thank you for your business.

@@ -1,0 +1,122 @@
+name: Deploy to server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  APP_DIR: /opt/who-let-the-agents-act
+  ARCHIVE: who-let-the-agents-act-${{ github.sha }}.zip
+
+jobs:
+  deploy:
+    name: Package and deploy main
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out the commit being deployed
+        uses: actions/checkout@v4
+
+      - name: Create deployment archive
+        run: |
+          zip -qr "$ARCHIVE" . \
+            -x "$ARCHIVE" \
+            -x '.git/*' \
+               '.env' \
+               'scenarios/*/_data/*' \
+               'scenarios/*/_runs/*'
+
+      - name: Copy archive to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: ${{ env.ARCHIVE }}
+          target: /tmp/
+          overwrite: true
+
+      - name: Extract and deploy on server
+        uses: appleboy/ssh-action@v1.2.2
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_API_KEYS: ${{ secrets.GROQ_API_KEYS }}
+          GROQ_MODEL: ${{ secrets.GROQ_MODEL }}
+          DOMAIN: ${{ secrets.DOMAIN }}
+          COOKIE_SECURE: ${{ secrets.COOKIE_SECURE }}
+          ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+          RUN_RATE_LIMIT_PER_MINUTE: ${{ secrets.RUN_RATE_LIMIT_PER_MINUTE }}
+          RUN_MAX_CONCURRENT_PER_IP: ${{ secrets.RUN_MAX_CONCURRENT_PER_IP }}
+          RUN_SUSTAINED_RATE_MINUTES: ${{ secrets.RUN_SUSTAINED_RATE_MINUTES }}
+          RUN_ABUSE_BLOCK_MINUTES: ${{ secrets.RUN_ABUSE_BLOCK_MINUTES }}
+          UPLOAD_RATE_LIMIT_PER_MINUTE: ${{ secrets.UPLOAD_RATE_LIMIT_PER_MINUTE }}
+          MODEL_MAX_ATTEMPTS_PER_RUN: ${{ secrets.MODEL_MAX_ATTEMPTS_PER_RUN }}
+          MODEL_DAILY_CALL_LIMIT: ${{ secrets.MODEL_DAILY_CALL_LIMIT }}
+          MODEL_TIMEOUT_SECONDS: ${{ secrets.MODEL_TIMEOUT_SECONDS }}
+          TRUST_PROXY_HEADERS: ${{ secrets.TRUST_PROXY_HEADERS }}
+          SESSION_TTL_SECONDS: ${{ secrets.SESSION_TTL_SECONDS }}
+          GITHUB_REPO: ${{ secrets.GITHUB_REPO }}
+          GITHUB_REPO_URL: ${{ secrets.GITHUB_REPO_URL }}
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          envs: GROQ_API_KEY,GROQ_API_KEYS,GROQ_MODEL,DOMAIN,COOKIE_SECURE,ALLOWED_ORIGINS,RUN_RATE_LIMIT_PER_MINUTE,RUN_MAX_CONCURRENT_PER_IP,RUN_SUSTAINED_RATE_MINUTES,RUN_ABUSE_BLOCK_MINUTES,UPLOAD_RATE_LIMIT_PER_MINUTE,MODEL_MAX_ATTEMPTS_PER_RUN,MODEL_DAILY_CALL_LIMIT,MODEL_TIMEOUT_SECONDS,TRUST_PROXY_HEADERS,SESSION_TTL_SECONDS,GITHUB_REPO,GITHUB_REPO_URL
+          command_timeout: 15m
+          script: |
+            set -Eeuo pipefail
+
+            APP_DIR=/opt/who-let-the-agents-act
+            ARCHIVE=/tmp/${{ env.ARCHIVE }}
+            STAGE_DIR="/tmp/who-let-the-agents-act-stage-${{ github.sha }}"
+
+            command -v unzip >/dev/null 2>&1 || {
+              echo "unzip is required on the server" >&2
+              exit 1
+            }
+
+            mkdir -p "$STAGE_DIR"
+            unzip -q "$ARCHIVE" -d "$STAGE_DIR"
+
+            # The archive excludes .env and generated runtime folders, so
+            # extracting over the existing deploy-owned directory preserves them.
+            mkdir -p "$APP_DIR"
+            cp -a "$STAGE_DIR/." "$APP_DIR/"
+
+            # Recreate the runtime configuration from GitHub Actions secrets.
+            # These settings are single-line dotenv values. Do not use shell
+            # escaping here: Docker Compose reads .env directly and would keep
+            # shell escape backslashes as part of the value.
+            umask 077
+            ENV_TMP="$APP_DIR/.env.tmp.$$"
+            : > "$ENV_TMP"
+            for env_name in \
+              GROQ_API_KEY GROQ_API_KEYS GROQ_MODEL DOMAIN COOKIE_SECURE \
+              ALLOWED_ORIGINS RUN_RATE_LIMIT_PER_MINUTE \
+              RUN_MAX_CONCURRENT_PER_IP RUN_SUSTAINED_RATE_MINUTES \
+              RUN_ABUSE_BLOCK_MINUTES UPLOAD_RATE_LIMIT_PER_MINUTE \
+              MODEL_MAX_ATTEMPTS_PER_RUN MODEL_DAILY_CALL_LIMIT \
+              MODEL_TIMEOUT_SECONDS TRUST_PROXY_HEADERS SESSION_TTL_SECONDS \
+              GITHUB_REPO GITHUB_REPO_URL; do
+              printf '%s=%s\n' "$env_name" "${!env_name}" >> "$ENV_TMP"
+            done
+            mv "$ENV_TMP" "$APP_DIR/.env"
+
+            cd "$APP_DIR"
+            ./deploy.sh
+
+            rm -f "$ARCHIVE"
+            rm -rf "$STAGE_DIR"
+            echo "Deployment completed successfully."

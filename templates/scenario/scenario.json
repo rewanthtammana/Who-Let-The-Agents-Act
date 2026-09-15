@@ -1,0 +1,11 @@
+{
+  "id": "example-scenario",
+  "title": "Example Scenario",
+  "number": 99,
+  "dek": "One sentence describing the lesson.",
+  "lesson": "The deterministic boundary this scenario teaches.",
+  "prompts": {
+    "exposure": "A prompt that demonstrates the vulnerable path.",
+    "contained": "A prompt that demonstrates the hardened path."
+  }
+}

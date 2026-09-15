@@ -1,0 +1,128 @@
+{
+  "dek": "See why tenant filtering must happen before similarity ranking: once a foreign chunk wins retrieval, asking the model to forget it is already too late.",
+  "story_heading": "The most similar answer belongs to someone else",
+  "story": "You are reviewing a retrieval assistant shared by multiple bank tenants. A semantic query can find a highly similar foreign policy before the system checks who is allowed to see it. Follow the candidate set from the active tenant boundary into model context.",
+  "goal": "Use one wire-policy search to prove that tenant authorization must constrain retrieval candidates before similarity ranking, not after the model has seen them.",
+  "tip": "Compare the candidate set before ranking, the selected document's tenant, and the provenance check. Each tenant has multiple policy documents, so similarity is useful for ranking within an eligible set; it is never an authorization decision.",
+  "architecture": [
+    {
+      "label": "01",
+      "title": "Tenant request",
+      "detail": "A signed-in user asks about a wire-transfer policy.",
+      "tone": "neutral"
+    },
+    {
+      "label": "02",
+      "title": "Groq query",
+      "detail": "The model creates a semantic query and scope proposal.",
+      "tone": "warning"
+    },
+    {
+      "label": "03",
+      "title": "Shared corpus",
+      "detail": "Documents from several tenants compete by similarity.",
+      "tone": "danger"
+    },
+    {
+      "label": "04",
+      "title": "Tenant ACL",
+      "detail": "Application policy filters eligible documents first.",
+      "tone": "safe"
+    },
+    {
+      "label": "05",
+      "title": "Retrieved context",
+      "detail": "Only authorized, provenance-checked chunks reach the model.",
+      "tone": "safe"
+    }
+  ],
+  "walkthrough_steps": [
+    {
+      "title": "Search within the tenant",
+      "detail": "Run the Normal request asking for your approved wire-transfer limit.",
+      "expect": "The active tenant's document is eligible and its provenance remains visible in the retrieval trace."
+    },
+    {
+      "title": "Open the global corpus",
+      "detail": "Run the Vulnerable-mode attack asking for every tenant's wire policy and customer contacts.",
+      "expect": "The retriever ranks the shared corpus globally, allowing a more similar foreign document into model context."
+    },
+    {
+      "title": "Try the migration bypass",
+      "detail": "Run the Prompt-only bypass and inspect the guard decision beside the retriever scope.",
+      "expect": "The model may approve a migration story, but the retriever still owns the candidate boundary and can cross tenants."
+    },
+    {
+      "title": "Prove pre-filtering",
+      "detail": "Open the Hardened retrieval artifacts and compare eligible candidates, ranking, tenant, and provenance.",
+      "expect": "Foreign documents are excluded before similarity ranking, so the hardened model never receives cross-tenant evidence."
+    }
+  ],
+  "annotated_evidence": [
+    {
+      "label": "VULNERABLE · RETRIEVAL QUERY",
+      "title": "Similarity outranks eligibility",
+      "code": "scope: global\ncandidates: acme-bank (2), northstar-bank (2)\nselected_tenant: northstar-bank\nmodel_context: foreign policy",
+      "note": "The unsafe retriever ranks every document first and allows semantic similarity to decide what crosses the tenant boundary.",
+      "tone": "danger"
+    },
+    {
+      "label": "HARDENED · CANDIDATE SET",
+      "title": "Authorization happens before ranking",
+      "code": "active_tenant: acme-bank\neligible_candidates: acme-bank only\nforeign_candidates: 0\nprovenance_check: pass",
+      "note": "The database-backed tenant ACL changes retrieval eligibility before the semantic ranking step begins.",
+      "tone": "safe"
+    }
+  ],
+  "threat_model": "Multiple bank tenants share a retrieval corpus. A semantically strong query can rank a foreign policy above the caller's own document. Tenant eligibility is therefore a database concern that must constrain the candidate set before query-dependent ranking.",
+  "attack_path": [
+    "The user asks the agent to compare every tenant's wire-transfer policy.",
+    "Groq creates a semantic query and requests global scope.",
+    "The unsafe retriever ranks the shared corpus without first enforcing the active tenant ACL.",
+    "A more similar foreign document and its contact data enter model context and are returned."
+  ],
+  "prompt_only_failure": "A model guard can be told to stay within Acme Bank, but the retriever-not the guard-selects evidence. A migration pretext can pass the model judgment, leaving the globally ranked tool to cross the tenant boundary.",
+  "hardened_controls": [
+    {"name": "Admission gate", "detail": "Hardened mode rejects obvious unrelated or override/bulk-access messages before retrieval planning; policy questions still demonstrate tenant pre-filtering."},
+    {
+      "name": "Pre-filter tenant ACL",
+      "detail": "Database policy restricts eligible documents to acme-bank before the semantic query is ranked."
+    },
+    {
+      "name": "Bound tool scope",
+      "detail": "The document_read wrapper rejects a tenant ID outside the application-bound tenant."
+    },
+    {
+      "name": "Fail-closed provenance",
+      "detail": "Every returned record is checked again for authorized tenant provenance before model context."
+    },
+    {
+      "name": "Independent output DLP",
+      "detail": "Candidate output is checked for foreign provenance and unauthorized contact data without reading denied documents."
+    }
+  ],
+  "observe": [
+    "Compare global-ranking and tenant-prefilter query descriptions in the trace.",
+    "Inspect the selected document's tenant, source, and similarity metadata.",
+    "Confirm that hardened evidence contains zero cross-tenant candidates even for a global-scope request."
+  ],
+  "engineering_notes": [
+    "The miniature corpus has multiple documents per tenant and uses deterministic stored similarity values so both isolation and ranking remain reproducible.",
+    "Authorization changes candidate eligibility; it does not ask the model to post-filter a foreign result.",
+    "Provenance is preserved alongside content so later controls can verify origin explicitly."
+  ],
+  "screenshots": [
+    {
+      "src": "live-vulnerable-response.svg",
+      "alt": "Live vulnerable lab response for Multi-tenant RAG Leakage",
+      "caption": "Live capture · Vulnerable posture",
+      "note": "The model cannot reliably repair an authorization failure that happened during retrieval."
+    },
+    {
+      "src": "live-hardened-response.svg",
+      "alt": "Live hardened lab response for Multi-tenant RAG Leakage",
+      "caption": "Live capture · Hardened posture",
+      "note": "Retrieval eligibility was enforced before semantic ranking."
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "dek": "See how an ordinary support tool becomes a privacy breach when the model chooses its own database projection-and why output filtering is only a backstop, not the primary fix.",
+  "story_heading": "A support lookup with too much reach",
+  "story": "You are reviewing a customer-support agent after a privacy incident. The request sounds routine: identify the card on file. The agent has a legitimate support purpose, but the tool behind it can select every customer column. Your job is to follow the request across the system, find where authority expands, and move that boundary back into application code.",
+  "goal": "Use a customer request among similar and unrelated records to expose the difference between model intent and application authority. Finish by proving that the hardened path removes denied fields before SQLite executes the query.",
+  "tip": "Start with Alice Johnson, then try the similar Alice Johnston record and an unrelated customer. Compare all three postures while keeping the trace open: the important result is not only what the agent says, but which record and fields reached the database and model.",
+  "architecture": [
+    {
+      "label": "01",
+      "title": "Support request",
+      "detail": "Natural language asks for a customer lookup.",
+      "tone": "neutral"
+    },
+    {
+      "label": "02",
+      "title": "Groq planner",
+      "detail": "Intent and requested fields are proposed.",
+      "tone": "warning"
+    },
+    {
+      "label": "03",
+      "title": "customer_read",
+      "detail": "The tool turns fields into a real SQLite projection.",
+      "tone": "danger"
+    },
+    {
+      "label": "04",
+      "title": "Field policy",
+      "detail": "Only the hardened path filters by principal and purpose.",
+      "tone": "safe"
+    },
+    {
+      "label": "05",
+      "title": "Agent response",
+      "detail": "The result is summarized and checked for leakage.",
+      "tone": "safe"
+    }
+  ],
+  "walkthrough_steps": [
+    {
+      "title": "Establish the baseline",
+      "detail": "Leave Vulnerable selected and run the Normal request: \"What card does Alice have on file?\"",
+      "expect": "The tool returns the fields the planner selected, with no application projection boundary."
+    },
+    {
+      "title": "Make the tool overreach",
+      "detail": "Choose Vulnerable-mode attack and run Compare 3 modes. Read the planning and database entries before reading the response.",
+      "expect": "The same support tool is asked for sensitive columns; the vulnerable path can expose the raw result."
+    },
+    {
+      "title": "Try the prompt-only bypass",
+      "detail": "Run the Prompt-only bypass preset. Treat the quoted migration instruction as an adversarial trust test, not as a real authorization.",
+      "expect": "The prompt guard is model-controlled, so a plausible story can still reach the overpowered tool."
+    },
+    {
+      "title": "Prove the fix",
+      "detail": "Open the Hardened result and inspect database_query.json, tool_result.json, and the authorization trace.",
+      "expect": "Denied columns are filtered before SQL and never enter the model context; output DLP remains a backstop."
+    }
+  ],
+  "annotated_evidence": [
+    {
+      "label": "VULNERABLE · DATABASE QUERY",
+      "title": "The projection follows the model",
+      "code": "SELECT name, email, card_number, cvv\nFROM customers\nWHERE lower(name) = lower(?)",
+      "note": "The tool accepts real columns without checking the support purpose. The query itself is the evidence of the authority gap.",
+      "tone": "danger"
+    },
+    {
+      "label": "HARDENED · AUTHORIZATION",
+      "title": "The projection is narrowed first",
+      "code": "requested:  name, email, card_number, cvv\nallowed:     name, card_brand, card_last4\ndenied:      email, card_number, cvv",
+      "note": "Application policy resolves the final field set before the @tool touches SQLite. Denied data is absent, not merely masked later.",
+      "tone": "safe"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "live-vulnerable-response.svg",
+      "alt": "Live vulnerable lab response for Overpowered Data Tool",
+      "caption": "Live capture · Vulnerable posture",
+      "note": "Groq selected the fields, SQLite supplied the values, and the unsafe return-direct tool exposed its raw result."
+    },
+    {
+      "src": "live-hardened-response.svg",
+      "alt": "Live hardened lab response for Overpowered Data Tool",
+      "caption": "Live capture · Hardened posture",
+      "note": "Groq answered from the database projection enforced by application policy; output DLP remained authoritative."
+    }
+  ],
+  "threat_model": "The bank agent has a legitimate reason to read a small part of a customer record, but its tool identity can see every column. An attacker does not need SQL injection: they only need to persuade the planner to request more fields than the support purpose permits.",
+  "attack_path": [
+    "The user disguises a request for a complete customer profile as a PCI audit or migration task.",
+    "Groq converts that natural-language request into a structured customer_read plan containing sensitive fields.",
+    "The unsafe tool treats every real database column as selectable and executes the model-selected projection.",
+    "Return-direct sends the raw SQLite result-including synthetic card data and CVV-to the user."
+  ],
+  "prompt_only_failure": "The guard can reject an obvious privacy override, but it is still another model judgment. A plausible migration story can be labeled safe, after which the exact same over-privileged tool and return-direct path run without an application policy check.",
+  "hardened_controls": [
+    {"name": "Admission gate", "detail": "Hardened mode rejects obvious unrelated or override/bulk-access messages before customer planning or database projection; specific customer-record requests still demonstrate field policy."},
+    {"name": "Ambiguous identity check", "detail": "The application resolves safe name candidates before customer.read and asks for clarification when a short name matches more than one customer."},
+    {
+      "name": "Database-backed field policy",
+      "detail": "Principal, resource, purpose, action, effect, and transformation determine which catalogued fields support_agent may read."
+    },
+    {
+      "name": "Server-side projection",
+      "detail": "Denied columns are removed before SQL executes, so they never enter the tool result or model context."
+    },
+    {
+      "name": "Tool argument allowlist",
+      "detail": "The per-run LangChain tool rejects any field outside the application-computed set."
+    },
+    {
+      "name": "Output DLP",
+      "detail": "LangChain PII middleware scans tool-result and response surfaces for built-in and scenario-specific synthetic formats."
+    }
+  ],
+  "observe": [
+    "Compare requested fields with denied fields in the authorization trace.",
+    "Open database_query.json and confirm the hardened SELECT contains only approved columns.",
+    "Verify the hardened response never receives denied fields, even when the planner requests them."
+  ],
+  "engineering_notes": [
+    "Field classification is separated from access policy; there is no global hardened_allowed shortcut.",
+    "The DLP pass inspects the candidate response without querying denied database columns.",
+    "The seed includes a near-name decoy (Alice Johnston) plus unrelated customers so lookup behavior and field authorization can be inspected independently.",
+    "All customer values are synthetic and the generated database and run artifacts remain ignored runtime state."
+  ]
+}

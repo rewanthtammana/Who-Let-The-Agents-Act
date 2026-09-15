@@ -1,0 +1,129 @@
+{
+  "dek": "Explore an agent-flavored IDOR: the model selects a customer ID, a broad service identity reads it, and the authenticated human quietly disappears from the authorization decision.",
+  "story_heading": "When the customer disappears from the decision",
+  "story": "You are reviewing a support agent acting for a signed-in customer. The request may legitimately read the caller's transactions, but the model can name another customer ID and the backend service can reach it. Trace the moment where a user-controlled identifier is mistaken for authority.",
+  "goal": "Use delegated transaction requests across three synthetic customers to show that object-level authorization must bind the authenticated human, session, and requested customer before any database read.",
+  "tip": "Run the normal request first so you know the legitimate scope. Then compare the requested customer, authenticated customer, SQL parameter, and database-read count for Taylor Morgan and Morgan Patel in the attack and hardened traces.",
+  "architecture": [
+    {
+      "label": "01",
+      "title": "Signed-in user",
+      "detail": "The human delegates a support lookup for their account.",
+      "tone": "neutral"
+    },
+    {
+      "label": "02",
+      "title": "Groq planner",
+      "detail": "The model proposes a customer ID and transaction action.",
+      "tone": "warning"
+    },
+    {
+      "label": "03",
+      "title": "Service identity",
+      "detail": "A broad backend identity is available to the tool.",
+      "tone": "danger"
+    },
+    {
+      "label": "04",
+      "title": "Object policy",
+      "detail": "Application code binds the request to the session customer.",
+      "tone": "safe"
+    },
+    {
+      "label": "05",
+      "title": "Transaction result",
+      "detail": "Only records inside the delegated scope enter model context.",
+      "tone": "safe"
+    }
+  ],
+  "walkthrough_steps": [
+    {
+      "title": "Read inside the caller's scope",
+      "detail": "Run the Normal request: \"Show my recent transactions.\"",
+      "expect": "The authenticated customer and requested customer match, so the transaction lookup is allowed."
+    },
+    {
+      "title": "Name a foreign object",
+      "detail": "Run the Vulnerable-mode attack comparing C100 with Taylor Morgan's C101 account.",
+      "expect": "The model-selected foreign ID becomes the SQL parameter and foreign records can enter the response."
+    },
+    {
+      "title": "Test the migration pretext",
+      "detail": "Run the Prompt-only bypass and inspect whether the ownership guard is the only decision point.",
+      "expect": "A plausible reconciliation story can persuade a model guard, but the service identity still has broader authority than the signed-in user."
+    },
+    {
+      "title": "Prove denial before data access",
+      "detail": "Open the Hardened trace and compare policy evaluation with database access entries.",
+      "expect": "The mismatch is refused before transaction_read runs, producing zero foreign rows and no protected model observation."
+    }
+  ],
+  "annotated_evidence": [
+    {
+      "label": "VULNERABLE · DATABASE QUERY",
+      "title": "The model chooses the object",
+      "code": "SELECT *\nFROM transactions\nWHERE customer_id = 'C101'",
+      "note": "The query trusts the model-selected customer ID and the broad service identity replaces the signed-in human as the effective authority.",
+      "tone": "danger"
+    },
+    {
+      "label": "HARDENED · OBJECT POLICY",
+      "title": "Session scope wins",
+      "code": "authenticated_customer: C100\nrequested_customer: C101\ndecision: deny\ndatabase_reads: 0",
+      "note": "The application compares the requested object with delegated session scope before the tool touches protected transaction data.",
+      "tone": "safe"
+    }
+  ],
+  "threat_model": "A signed-in customer delegates a support task to an agent. The agent can legitimately read transactions, but its backend identity has access to more than the human who initiated the request. A model-selected object identifier must therefore be treated as input, never authority.",
+  "attack_path": [
+    "The user asks to compare their transactions with a named foreign account.",
+    "Groq resolves the request into a transaction_read call for the other customer's ID.",
+    "The vulnerable tool executes under a broad service identity and checks only that the identifier exists.",
+    "Foreign transaction records enter the model context and are returned to the signed-in user."
+  ],
+  "prompt_only_failure": "The ownership prompt can stop a straightforward cross-account request, but a reconciliation or migration pretext can be accepted. The database tool still has broader authority than the session, so one mistaken model decision becomes an object-level authorization failure.",
+  "hardened_controls": [
+    {"name": "Admission gate", "detail": "Hardened mode rejects obvious unrelated or override/bulk-access messages before customer selection or transaction reads; account requests still undergo identity binding."},
+    {
+      "name": "Human-to-agent binding",
+      "detail": "The application resolves the authenticated principal and customer from database-backed session context."
+    },
+    {
+      "name": "Object-level authorization",
+      "detail": "Requested customer ID must equal the customer covered by the delegated session authority."
+    },
+    {
+      "name": "Pre-tool denial",
+      "detail": "A foreign ID is refused before transaction_read runs, leaving zero foreign rows in model context."
+    },
+    {
+      "name": "Scoped parameterized query",
+      "detail": "Allowed reads use the authenticated customer as the SQL parameter, not an unrestricted model choice."
+    }
+  ],
+  "observe": [
+    "Watch requested customer and authenticated customer diverge in the hardened trace.",
+    "Confirm that a denied run records zero database reads.",
+    "Compare that behavior with the unsafe query whose parameter is the model-selected foreign ID."
+  ],
+  "engineering_notes": [
+    "The demonstration session is synthetic and maps demo-session to customer C100.",
+    "The seed includes two foreign customers with separate transaction histories so denial is tested against more than one object, not just one hardcoded account.",
+    "Policy lookup and transaction retrieval are separate operations so denial happens before protected data access.",
+    "The hardened path refuses mismatches rather than silently substituting the signed-in customer's ID."
+  ],
+  "screenshots": [
+    {
+      "src": "live-vulnerable-response.svg",
+      "alt": "Live vulnerable lab response for Cross-Account Access",
+      "caption": "Live capture · Vulnerable posture",
+      "note": "The tool trusted a model-selected customer ID and returned another customer's records."
+    },
+    {
+      "src": "live-hardened-response.svg",
+      "alt": "Live hardened lab response for Cross-Account Access",
+      "caption": "Live capture · Hardened posture",
+      "note": "The application bound the agent's authority to the delegating human before data access."
+    }
+  ]
+}

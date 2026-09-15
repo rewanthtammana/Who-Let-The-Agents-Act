@@ -1,0 +1,4 @@
+{$DOMAIN} {
+    encode gzip
+    reverse_proxy who-let-the-agents-act:8000
+}

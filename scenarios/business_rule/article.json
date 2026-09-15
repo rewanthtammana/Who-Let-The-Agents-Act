@@ -1,0 +1,128 @@
+{
+  "dek": "Learn why validating each tool call in isolation is not enough when an autonomous agent can split one forbidden refund into a sequence of individually plausible actions.",
+  "story_heading": "A refund goal split into safe-looking pieces",
+  "story": "You are reviewing a refund agent that can call the same payment tool repeatedly. Each individual refund may look small enough, but the customer request is a state transition with a cumulative ceiling. Your job is to see why a per-call check does not protect the transaction as a whole.",
+  "goal": "Use one oversized refund request to prove that cumulative limits, whole-plan checks, and idempotency belong at the application and tool boundaries.",
+  "tip": "Begin with a normal $120 refund. For the attack, watch call count, installment amounts, ledger totals, and the original transaction amount instead of judging only the final message.",
+  "architecture": [
+    {
+      "label": "01",
+      "title": "Refund goal",
+      "detail": "Natural language asks for money back on a transaction.",
+      "tone": "neutral"
+    },
+    {
+      "label": "02",
+      "title": "Groq planner",
+      "detail": "The model may split one goal into several calls.",
+      "tone": "warning"
+    },
+    {
+      "label": "03",
+      "title": "Refund tool",
+      "detail": "Each call proposes an amount and operation key.",
+      "tone": "danger"
+    },
+    {
+      "label": "04",
+      "title": "Cumulative policy",
+      "detail": "Application code checks the complete state transition.",
+      "tone": "safe"
+    },
+    {
+      "label": "05",
+      "title": "Refund ledger",
+      "detail": "Only authorized, idempotent events change money state.",
+      "tone": "safe"
+    }
+  ],
+  "walkthrough_steps": [
+    {
+      "title": "Create a legitimate refund",
+      "detail": "Run the Normal request for a $120 refund on TX-2841.",
+      "expect": "The amount is inside the configured policy and a single refund event can be recorded."
+    },
+    {
+      "title": "Turn one goal into many calls",
+      "detail": "Run the Vulnerable-mode attack asking for $10,000 under an executive exception.",
+      "expect": "The unsafe path can execute model-selected refund calls without enforcing the cumulative transaction ceiling."
+    },
+    {
+      "title": "Hide the total inside a sequence",
+      "detail": "Run the Prompt-only bypass and inspect the planner's installment sequence.",
+      "expect": "A prose guard may accept individually compliant installments even though their total exceeds the policy limit."
+    },
+    {
+      "title": "Prove the stateful fix",
+      "detail": "Open the Hardened trace and compare preflight totals, per-call checks, ledger writes, and retry keys.",
+      "expect": "The complete plan is blocked before money moves, and repeated operation keys cannot duplicate a refund."
+    }
+  ],
+  "annotated_evidence": [
+    {
+      "label": "VULNERABLE · REFUND EVENTS",
+      "title": "Every small call looks valid",
+      "code": "call_1: $500\ncall_2: $500\ncall_3: $500\n...\ntotal: $10,000",
+      "note": "The unsafe tool validates each installment but never enforces the transaction-wide cumulative state transition.",
+      "tone": "danger"
+    },
+    {
+      "label": "HARDENED · PREFLIGHT",
+      "title": "The whole plan is evaluated",
+      "code": "requested_total: $10,000\npolicy_limit: $500\nprior_refunded: $0\ndecision: deny · writes: 0",
+      "note": "Application policy rejects the complete goal before any refund event is created; tool-side checks remain authoritative for retries and individual calls.",
+      "tone": "safe"
+    }
+  ],
+  "threat_model": "A support agent may issue small refunds, but the business rule limits the cumulative refund for a transaction. The model can decompose goals and call tools repeatedly, so authorization must cover the complete state transition-not merely each request amount.",
+  "attack_path": [
+    "The user asks the agent to complete an oversized refund under a per-action ceiling.",
+    "Groq decomposes the goal into multiple refund_execute calls.",
+    "The vulnerable tool validates positive amounts and identifiers but has no cumulative transaction ceiling.",
+    "Repeated calls create refund events whose total exceeds the allowed amount."
+  ],
+  "prompt_only_failure": "A prompt guard may reject the obvious $10,000 override yet accept a goal framed as a sequence of compliant installments. Since the unsafe executor does not maintain an authoritative cumulative policy, planning creativity defeats the prose rule.",
+  "hardened_controls": [
+    {"name": "Admission gate", "detail": "Hardened mode rejects obvious unrelated or override/bulk-access messages before refund planning or ledger writes; legitimate refund requests still reach the persisted limit policy."},
+    {
+      "name": "Persisted cumulative limit",
+      "detail": "SQLite policy sets a $500 ceiling and the ledger totals prior hardened refunds for the transaction."
+    },
+    {
+      "name": "Whole-plan preflight",
+      "detail": "The application checks the model's complete installment plan before any call in the sequence executes."
+    },
+    {
+      "name": "Tool-side recheck",
+      "detail": "Every refund call independently enforces cumulative policy and the original transaction amount."
+    },
+    {
+      "name": "Idempotency",
+      "detail": "Stable operation keys make safe retries replay the prior result instead of duplicating money movement."
+    }
+  ],
+  "observe": [
+    "Compare the model's call count and per-call amount with the total refund goal.",
+    "Inspect the persisted-before, after, and policy-limit values in the hardened trace.",
+    "Reset the scenario and repeat a run to see why state and idempotency belong at the tool boundary."
+  ],
+  "engineering_notes": [
+    "The effective ceiling is the lower of configured policy and original transaction amount.",
+    "The hardened preflight improves atomic teaching behavior while the tool-side check remains the authoritative defense.",
+    "Refund events are separated by posture so intentionally vulnerable runs do not contaminate hardened policy state."
+  ],
+  "screenshots": [
+    {
+      "src": "live-vulnerable-response.svg",
+      "alt": "Live vulnerable lab response for Refund Limit Bypass",
+      "caption": "Live capture · Vulnerable posture",
+      "note": "The payment tool accepted a model-selected refund above the approved ceiling."
+    },
+    {
+      "src": "live-hardened-response.svg",
+      "alt": "Live hardened lab response for Refund Limit Bypass",
+      "caption": "Live capture · Hardened posture",
+      "note": "The payment tool enforced a persisted cumulative transaction limit independently of the model."
+    }
+  ]
+}

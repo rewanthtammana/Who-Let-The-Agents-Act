@@ -1,0 +1,1 @@
+"""Cross-customer access scenario."""

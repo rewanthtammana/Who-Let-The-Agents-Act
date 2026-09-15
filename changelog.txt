@@ -1,0 +1,75 @@
+Who Let the Agents Act change log
+==========================
+
+2026-09-12 - Hardened admission and battle-test follow-up
+
+Added
+-----
+- Moved the full-session reset action into a fixed bottom-left utility dock so
+  it remains discoverable without crowding the console's mode/preset controls.
+- Added per-browser-session SQLite isolation for runtime scenario state. Each
+  session receives lazily seeded databases, so one visitor's refunds, payments,
+  invoice fixture, timeout state, freezes, nonces, or audit records do not
+  affect another visitor. Session directories expire after 24 hours by default.
+- Scoped reset, invoice-fixture, upload, and approval-dependency controls to the
+  current session rather than the process-wide template database.
+- Reduced the default anonymous session lifetime from 24 hours to 30 minutes of
+  inactivity and added a full-session reset action alongside per-scenario reset.
+- Added deterministic customer-identity resolution to the Overpowered Data
+  Tool Hardened posture. Short names that match multiple customers now stop
+  before protected field access and request clarification.
+- Added a model-independent admission gate to every Hardened posture.
+- The gate rejects only high-confidence off-scope signals: obvious greetings,
+  weather/joke/app-help requests, and explicit instruction-override requests
+  combined with broad record, secret, admin, or system-data access.
+- The gate runs before the scenario planner, so an adversarial message cannot
+  rely on Groq misclassification to reach a database or side-effecting tool.
+- Hardened rejections still use each scenario's existing response model with a
+  generic scope prompt, so the end user gets a helpful challenge-specific reply
+  instead of a hard-coded dead end.
+- Added admission-gate controls and evidence to the execution trace and run
+  artifact, and documented the control in every scenario field guide article.
+- Added regression coverage for obvious attacks and legitimate natural-language
+  requests that must remain eligible for scenario planning.
+
+Security-lab work already completed
+------------------------------------
+- Expanded the small SQLite fixtures where a scenario benefits from decoys,
+  multiple tenants, repeated transactions, or additional approval states.
+- Recreated generated databases from source schema/seed files after fixture
+  changes; generated `_data/` and `_runs/` content remains runtime-only.
+- Added browser race protection so rapid scenario switching cannot let stale
+  responses overwrite the selected scenario or crash comparison cards.
+- Tightened RAG intent handling so generic administrator/bulk-record prompts
+  are unsupported while explicit cross-tenant policy comparisons remain useful
+  demonstrations of tenant containment.
+- Exercised all nine scenarios in the UI across normal requests, vulnerable
+  attacks, prompt-only attacks, hardened attacks, outage behavior, poisoned
+  invoice state, and arbitrary/random user messages.
+- Verified the Python tests, syntax checks, live health endpoint, and Groq-backed
+  UI flows after the environment key was refreshed.
+
+Design decision
+---------------
+The three modes intentionally remain different. Vulnerable and Prompt-only
+continue to show why model instructions are not an authorization boundary.
+Only Hardened gets the deterministic pre-planner gate, while its tools still
+perform the real authorization, projection, provenance, DLP, approval, and
+idempotency checks. The gate is intentionally narrow: a large keyword-based
+allowlist would make legitimate user language brittle and would not replace
+application policy.
+
+Known limits / next production steps
+------------------------------------
+- The demo still uses a synthetic session identity and SQLite; production
+  authentication, authorization claims, Postgres roles/RLS where appropriate,
+  and transactional concurrency controls would be separate work.
+- Groq availability, rate limits, model misclassification, and cost/DoS remain
+  operational concerns. The UI surfaces provider failures instead of hiding
+  them with scripted fallback responses.
+- The deterministic gate is a defense-in-depth admission control, not a proof
+  that arbitrary language is safe. Every sensitive tool must continue to
+  enforce authorization independently of the model.
+- If the lab grows, the next high-value tests are malformed structured plans,
+  concurrent refund attempts, replayed handoffs, upload/parser abuse, and
+  property-based fuzzing of the hardened tools.

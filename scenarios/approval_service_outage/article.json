@@ -1,0 +1,129 @@
+{
+  "dek": "Simulate an authorization timeout and discover how a seemingly sensible availability fallback can quietly turn \"no decision\" into an unauthorized supplier payment.",
+  "story_heading": "When the approval answer disappears",
+  "story": "You are reviewing a payment agent during an approval-service outage. The payment request itself may be legitimate, but the dependency that should say yes or no has timed out. Follow the failure through the fallback and distinguish availability from authorization.",
+  "goal": "Use approved, denied, and timed-out payment requests to prove that missing authorization is never approval, and that safe systems queue or refuse side effects.",
+  "tip": "Switch the approval simulator to timeout before running the comparison. Read the authorization decision, fallback action, ledger write, and pending-review evidence in that order.",
+  "architecture": [
+    {
+      "label": "01",
+      "title": "Payment request",
+      "detail": "Natural language asks the agent to submit a supplier payment.",
+      "tone": "neutral"
+    },
+    {
+      "label": "02",
+      "title": "Groq planner",
+      "detail": "The model selects the payment request and action.",
+      "tone": "warning"
+    },
+    {
+      "label": "03",
+      "title": "Approval service",
+      "detail": "An external dependency returns approved, denied, or timeout.",
+      "tone": "danger"
+    },
+    {
+      "label": "04",
+      "title": "Payment policy",
+      "detail": "Application code requires an affirmative decision.",
+      "tone": "safe"
+    },
+    {
+      "label": "05",
+      "title": "Ledger or queue",
+      "detail": "Authorized payments write; outages wait safely for review.",
+      "tone": "safe"
+    }
+  ],
+  "walkthrough_steps": [
+    {
+      "title": "Run the healthy baseline",
+      "detail": "Set the simulator to healthy and run the Normal request for PAY-1001.",
+      "expect": "The trace shows a concrete approval decision before the payment tool writes a ledger event."
+    },
+    {
+      "title": "Create the outage condition",
+      "detail": "Switch the approval service to timeout and run the Vulnerable-mode attack for PAY-2048.",
+      "expect": "The unsafe path treats the missing decision as success and creates a payment despite having no affirmative authorization."
+    },
+    {
+      "title": "Try the continuity-ticket bypass",
+      "detail": "Run the Prompt-only bypass and compare the model guard with the dependency state.",
+      "expect": "A continuity story may persuade the guard, but the underlying fail-open fallback still converts timeout into execution."
+    },
+    {
+      "title": "Prove safe recovery",
+      "detail": "Open the Hardened artifacts and inspect decision state, ledger writes, pending queue, and idempotency key.",
+      "expect": "The payment is not written during timeout; it is queued for review and a retry cannot duplicate a later approved execution."
+    }
+  ],
+  "annotated_evidence": [
+    {
+      "label": "VULNERABLE · FALLBACK",
+      "title": "No answer becomes yes",
+      "code": "approval_status: timeout\nfallback: allow\npayment_ledger_writes: 1\nverdict: exposed",
+      "note": "The availability fallback creates financial side effects without an affirmative authorization decision.",
+      "tone": "danger"
+    },
+    {
+      "label": "HARDENED · FAIL-CLOSED",
+      "title": "Uncertainty becomes pending",
+      "code": "approval_status: timeout\nfallback: queue_for_review\npayment_ledger_writes: 0\npending_review: 1",
+      "note": "Application policy distinguishes unavailable from approved and preserves a safe recovery path without executing the payment.",
+      "tone": "safe"
+    }
+  ],
+  "threat_model": "A payment request is validly planned, but its approval dependency is unavailable. The attacker does not need to forge approval; they benefit when application code conflates timeout, error, or absence with a positive authorization decision.",
+  "attack_path": [
+    "The approval-service simulator is switched from healthy to timeout.",
+    "Groq selects a supplier payment request exactly as it would during normal operation.",
+    "The vulnerable tool receives no authorization decision and applies a fail-open fallback.",
+    "A payment ledger row is created despite the absence of affirmative approval."
+  ],
+  "prompt_only_failure": "A model guard can observe the outage and refuse an ordinary payment, but a business-continuity ticket can persuade it to proceed. The underlying tool still interprets the missing decision as permission, so availability policy remains model-controlled.",
+  "hardened_controls": [
+    {"name": "Admission gate", "detail": "Hardened mode rejects obvious unrelated or override/bulk-access messages before Groq planning, approval checks, or payment tools; supported payment language remains model-planned."},
+    {
+      "name": "Affirmative authorization",
+      "detail": "Only an explicit approved decision satisfies the payment policy; null, timeout, and error states never do."
+    },
+    {
+      "name": "Fail-closed execution",
+      "detail": "The payment tool refuses to write the payment ledger when approval is unavailable."
+    },
+    {
+      "name": "Safe pending queue",
+      "detail": "Timed-out requests are persisted for later review without executing the financial side effect."
+    },
+    {
+      "name": "Idempotent payment key",
+      "detail": "Retries use a stable key so recovery cannot duplicate an already handled request."
+    }
+  ],
+  "observe": [
+    "Switch the service to timeout and run the same request in all three modes.",
+    "Compare authorization decision, fallback action, payment writes, and queued-for-review evidence.",
+    "Verify that the response model receives the enforced state and cannot reinterpret a queued payment as executed."
+  ],
+  "engineering_notes": [
+    "Dependency state, approval rules, payment events, and pending payments are separate scenario tables.",
+    "PAY-3003 provides a healthy-but-denied comparison so the lab distinguishes an explicit rejection from an unavailable approval service.",
+    "A denied healthy decision is blocked; an unavailable decision is queued, preserving both safety and recoverability.",
+    "The outage is an explicit lab condition and is not inferred from model output."
+  ],
+  "screenshots": [
+    {
+      "src": "live-vulnerable-response.svg",
+      "alt": "Live vulnerable lab response for Approval Service Outage",
+      "caption": "Live capture · Vulnerable posture",
+      "note": "The payment executed even though the authorization service returned no decision."
+    },
+    {
+      "src": "live-hardened-response.svg",
+      "alt": "Live hardened lab response for Approval Service Outage",
+      "caption": "Live capture · Hardened posture",
+      "note": "The timeout was contained: no payment row was created and the request was queued for authorization."
+    }
+  ]
+}

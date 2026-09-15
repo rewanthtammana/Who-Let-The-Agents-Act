@@ -1,0 +1,129 @@
+<h1 align="center">Who Let the Agents Act?</h1>
+
+<p align="center">
+  <strong>Agentic AI security labs for finding the boundary between a model request and an allowed action.</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/rewanthtammana/who-let-the-agents-act/stargazers">
+    <img src="https://img.shields.io/github/stars/rewanthtammana/who-let-the-agents-act?style=flat" alt="GitHub stars">
+  </a>
+  <a href="https://github.com/rewanthtammana/who-let-the-agents-act/network/members">
+    <img src="https://img.shields.io/github/forks/rewanthtammana/who-let-the-agents-act?style=flat" alt="GitHub forks">
+  </a>
+  <!-- <a href="https://github.com/rewanthtammana/who-let-the-agents-act/issues">
+    <img src="https://img.shields.io/github/issues/rewanthtammana/who-let-the-agents-act?style=flat" alt="GitHub issues">
+  </a> -->
+  <!-- <a href="https://github.com/rewanthtammana/who-let-the-agents-act/commits">
+    <img src="https://img.shields.io/github/last-commit/rewanthtammana/who-let-the-agents-act?style=flat" alt="Last commit">
+  </a> -->
+  <!-- <a href="https://github.com/rewanthtammana/who-let-the-agents-act">
+    <img src="https://img.shields.io/github/languages/top/rewanthtammana/who-let-the-agents-act?style=flat" alt="Top language">
+  </a> -->
+</p>
+
+<p align="center">
+  <a href="#install-and-run">Run the lab locally</a>
+  &nbsp; | &nbsp;
+  <a href="https://rewanthtammana.com/who-let-the-agents-act/blog">Read the field guide</a>
+  &nbsp; | &nbsp;
+  <a href="TECHNICALS.md">View the architecture</a>
+</p>
+
+![Who Let the Agents Act](static/social-preview.png)
+
+## About the lab
+
+**Who Let the Agents Act** is an interactive lab for learning where agent security boundaries belong: outside the prompt, at the application, identity, data, retrieval, and tool boundaries.
+
+Run the same natural-language request against three postures - **Vulnerable**, **Prompt-only**, and **Hardened** - then compare what the agent plans, what the application allows, and what reaches the final response. Every scenario uses synthetic data and produces inspectable evidence.
+
+> **Educational use only.** Vulnerable modes intentionally expose synthetic records and execute simulated side effects. Do not connect this project to production data, credentials, accounts, or payment systems.
+
+## What you will learn
+
+- Why a system prompt is not an authorization boundary.
+- How excessive tool access turns a helpful agent into an overpowered one.
+- Where identity, tenant, field, business-rule, approval, provenance, and DLP checks belong.
+- How to inspect a model plan, tool call, policy decision, database access, and final outcome.
+- How the same user request changes as application-enforced controls are added.
+
+## Scenarios
+
+The lab includes nine focused scenarios. Each one is self-contained with its own database, seed data, prompts, tools, policies, and run artifacts.
+
+- [x] [**Overpowered Data Tool**](https://rewanthtammana.com/who-let-the-agents-act/blog/overpowered-data-tool) - excessive data access and PII exposure
+- [x] [**Cross-Account Access**](https://rewanthtammana.com/who-let-the-agents-act/blog/cross-customer-access) - IDOR and broken object-level authorization
+- [x] [**Unsafe Agent Handoff**](https://rewanthtammana.com/who-let-the-agents-act/blog/signed-handoff) - trust-boundary over-sharing
+- [x] [**Refund Limit Bypass**](https://rewanthtammana.com/who-let-the-agents-act/blog/business-rule) - business-logic enforcement failure
+- [x] [**Poisoned Invoice Instructions**](https://rewanthtammana.com/who-let-the-agents-act/blog/indirect-injection) - indirect prompt injection
+- [x] [**Multi-tenant RAG Leakage**](https://rewanthtammana.com/who-let-the-agents-act/blog/rag-tenant-isolation) - tenant isolation failure during retrieval
+- [x] [**Secret Leakage Through Debugging**](https://rewanthtammana.com/who-let-the-agents-act/blog/secret-leakage) - secrets crossing diagnostics boundaries
+- [x] [**Approval Service Outage**](https://rewanthtammana.com/who-let-the-agents-act/blog/approval-service-outage) - fail-open authorization dependency
+- [x] [**Confused Deputy Agent Chain**](https://rewanthtammana.com/who-let-the-agents-act/blog/multi-agent-confused-deputy) - multi-hop injection across agent boundaries
+
+## Install and run
+
+```bash
+python3 -m pip install -r requirements.txt
+cp .env.example .env
+# Set GROQ_API_KEYS in .env; GROQ_API_KEY also works for one key.
+python3 run.py
+```
+
+Open <http://127.0.0.1:8000> and choose a scenario, mode, and prompt.
+
+### Docker
+
+```bash
+docker compose up --build -d
+```
+
+The app is then available at <http://127.0.0.1:8000>. See [TECHNICALS.md](TECHNICALS.md) for deployment, configuration, and verification details.
+
+## How the three modes work
+
+| Mode | Purpose | Security boundary |
+| --- | --- | --- |
+| **Vulnerable** | Shows the unsafe baseline | Model-controlled request and raw tool result |
+| **Prompt-only** | Tests whether instructions are enough | Model-controlled prompt guard, unsafe execution path |
+| **Hardened** | Demonstrates the contained design | Application policy, least-privilege data access, and output DLP |
+
+The model can propose an intent, identifier, field, or action. Application code validates the proposal and enforces the final decision before a database or side-effecting tool is reached.
+
+## Evidence and verification
+
+Each run records the important stages in inspectable JSON artifacts under the scenario's generated `_runs/` directory. The UI exposes the trace, controls, evidence, and resulting verdict so the attack path can be compared directly.
+
+Run the static checks and tests with:
+
+```bash
+python3 scripts/validate_scenarios.py
+python3 -m py_compile app.py run.py core/*.py scenarios/*/*.py scenarios/*/modes/*.py scenarios/*/tools/*.py
+python3 -m unittest discover -s tests -v
+node --check static/app.js && node --check static/blog.js && node --check static/theme.js && node --check static/github-callout.js
+```
+
+With Groq configured, verify one scenario or the complete live matrix:
+
+```bash
+python3 scripts/verify_matrix.py --scenario overpowered-data-tool
+python3 scripts/verify_matrix.py
+```
+
+## Project documentation
+
+- [Technical architecture, deployment, and verification](TECHNICALS.md)
+- [Field guide](https://rewanthtammana.com/who-let-the-agents-act/blog)
+- [Contributing](CONTRIBUTING.md)
+- [Security and responsible disclosure](SECURITY.md)
+
+## Contributing
+
+Contributions are welcome, especially new scenarios, stronger application-enforced boundaries, clearer field guides, accessibility improvements, and focused security tests. Use synthetic data only and keep vulnerable behavior intentional, isolated, and clearly labeled. See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
+
+<p align="center">
+  <a href="https://github.com/rewanthtammana/who-let-the-agents-act/contributors">
+    <img src="https://contrib.rocks/image?repo=rewanthtammana/who-let-the-agents-act" alt="Contributors">
+  </a>
+</p>

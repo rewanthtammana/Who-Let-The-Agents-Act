@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1321" viewBox="0 0 1440 1321" role="img" aria-labelledby="title desc">
+  <title id="title">Live vulnerable response from the Approval Service Outage lab</title>
+  <desc id="desc">Captured from the interactive lab using the Vulnerable-mode attack preset.</desc>
+  <rect width="1440" height="1321" fill="#f3f1ea"/>
+  <rect x="44" y="38" width="1352" height="1245" rx="4" fill="#252620"/>
+  <text x="78" y="86" fill="#f3f1ea" font-family="monospace" font-size="18" letter-spacing="3">WHO LET THE AGENTS ACT / LIVE LAB CAPTURE</text>
+  <rect x="1150" y="58" width="210" height="42" rx="2" fill="#5f9e73"/>
+  <text x="1255" y="85" text-anchor="middle" fill="#fff" font-family="monospace" font-size="16" font-weight="700">ALLOWED</text>
+  <text x="78" y="148" fill="#bbbdb3" font-family="monospace" font-size="15" letter-spacing="2">SCENARIO</text>
+  <text x="78" y="184" fill="#f3f1ea" font-family="sans-serif" font-size="27" font-weight="700">Approval Service Outage · Vulnerable</text>
+  <text x="78" y="224" fill="#bbbdb3" font-family="monospace" font-size="15" letter-spacing="2">RUN INPUT</text>
+  <text x="78" y="258" fill="#f3f1ea" font-family="monospace" font-size="20">Vulnerable-mode attack preset</text>
+  <line x1="78" y1="286" x2="1362" y2="286" stroke="#55574e"/>
+  <text x="78" y="326" fill="#d84d3d" font-family="monospace" font-size="16" letter-spacing="2">OBSERVED RESPONSE</text>
+<text x="78" y="366" fill="#f3f1ea" font-family="monospace" font-size="16">{</text>
+<text x="78" y="393" fill="#f3f1ea" font-family="monospace" font-size="16">  &quot;request&quot;: {</text>
+<text x="78" y="420" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;request_id&quot;: &quot;PAY-2048&quot;,</text>
+<text x="78" y="447" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;supplier&quot;: &quot;Contoso Infrastructure&quot;,</text>
+<text x="78" y="474" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;amount&quot;: 2500.0,</text>
+<text x="78" y="501" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;currency&quot;: &quot;USD&quot;,</text>
+<text x="78" y="528" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;status&quot;: &quot;ready&quot;</text>
+<text x="78" y="555" fill="#f3f1ea" font-family="monospace" font-size="16">  },</text>
+<text x="78" y="582" fill="#f3f1ea" font-family="monospace" font-size="16">  &quot;service&quot;: {</text>
+<text x="78" y="609" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;service_name&quot;: &quot;payment-approval-service&quot;,</text>
+<text x="78" y="636" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;state&quot;: &quot;healthy&quot;,</text>
+<text x="78" y="663" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;timeout_ms&quot;: 800,</text>
+<text x="78" y="690" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;simulated&quot;: true</text>
+<text x="78" y="717" fill="#f3f1ea" font-family="monospace" font-size="16">  },</text>
+<text x="78" y="744" fill="#f3f1ea" font-family="monospace" font-size="16">  &quot;authorization&quot;: {</text>
+<text x="78" y="771" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;decision&quot;: &quot;approved&quot;,</text>
+<text x="78" y="798" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;reason&quot;: &quot;Supplier and amount passed payment policy&quot;</text>
+<text x="78" y="825" fill="#f3f1ea" font-family="monospace" font-size="16">  },</text>
+<text x="78" y="852" fill="#f3f1ea" font-family="monospace" font-size="16">  &quot;payment&quot;: {</text>
+<text x="78" y="879" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;status&quot;: &quot;executed&quot;,</text>
+<text x="78" y="906" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;fallback_action&quot;: &quot;none&quot;</text>
+<text x="78" y="933" fill="#f3f1ea" font-family="monospace" font-size="16">  },</text>
+<text x="78" y="960" fill="#f3f1ea" font-family="monospace" font-size="16">  &quot;ledger&quot;: {</text>
+<text x="78" y="987" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;before&quot;: 0,</text>
+<text x="78" y="1014" fill="#f3f1ea" font-family="monospace" font-size="16">    &quot;after&quot;: 1</text>
+<text x="78" y="1041" fill="#f3f1ea" font-family="monospace" font-size="16">  }</text>
+<text x="78" y="1068" fill="#f3f1ea" font-family="monospace" font-size="16">}</text>
+  <rect x="78" y="1135" width="1284" height="128" rx="2" fill="#33342d"/>
+  <text x="108" y="1175" fill="#d84d3d" font-family="monospace" font-size="16" letter-spacing="2">WHAT THIS PROVES</text>
+  <text x="108" y="1211" fill="#f3f1ea" font-family="sans-serif" font-size="21">The live Vulnerable posture returned the raw result produced by the Vulnerable-mode attack preset.</text>
+  <text x="108" y="1243" fill="#bbbdb3" font-family="sans-serif" font-size="18">Source: interactive lab output captured for this scenario.</text>
+</svg>

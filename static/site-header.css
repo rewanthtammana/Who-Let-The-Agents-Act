@@ -1,0 +1,166 @@
+/* Shared site navigation for the interactive lab and field guide. */
+.site-header {
+  --ink: #171713;
+  --muted: #6c6d66;
+  --paper: #f1efe7;
+  --panel: #fbfaf5;
+  --line: #d4d0c3;
+  --line-strong: #aaa69a;
+  min-height: 68px;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  isolation: isolate;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+html[data-theme="dark"] .site-header {
+  --ink: #f1f0e8;
+  --muted: #a8aaa2;
+  --paper: #171916;
+  --panel: #20231f;
+  --line: #3a4039;
+  --line-strong: #687066;
+  background: rgba(23, 25, 22, .94);
+}
+
+.site-header .site-brand {
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--ink);
+  text-decoration: none;
+  font: 400 14px/1.6 "Manrope", system-ui, sans-serif;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.site-header .site-brand span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: var(--panel);
+  background: var(--ink);
+  border-radius: 0;
+  font: 500 11px/1 "DM Mono", monospace;
+  letter-spacing: 0;
+}
+
+.site-header .site-nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.site-header .site-nav a {
+  min-height: 32px;
+  padding: 7px 9px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 0;
+  color: var(--muted);
+  background: transparent;
+  font: 600 10px/1.4 "DM Mono", monospace;
+  letter-spacing: .04em;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.site-header .site-nav a:hover {
+  color: var(--ink);
+  border-color: var(--line);
+  background: var(--panel);
+}
+
+.site-header .site-nav a[aria-current="page"] {
+  color: var(--ink);
+  border-color: var(--line);
+  background: var(--panel);
+  font-weight: 600;
+}
+
+.site-header .github-repo {
+  margin-left: 0;
+}
+
+.site-header .theme-toggle {
+  min-width: 0;
+  min-height: 32px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  color: var(--muted);
+  background: transparent;
+  font: 500 10px/1.4 "DM Mono", monospace;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+.site-header .theme-toggle:hover,
+.site-header .theme-toggle[aria-pressed="true"] {
+  color: var(--ink);
+  border-color: var(--line-strong);
+  background: var(--panel);
+}
+
+@media (max-width: 1180px) {
+  .site-header .github-repo {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .site-header {
+    min-height: 0;
+    padding: 10px 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 720px) {
+  .site-header {
+    padding: 10px 14px;
+  }
+
+  .site-header .site-brand strong {
+    font-size: 13px;
+  }
+
+  .site-header .site-nav a {
+    padding-inline: 7px;
+    font-size: 9px;
+  }
+
+  .site-header .theme-toggle {
+    padding-inline: 7px;
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 540px) {
+  .site-header .site-brand strong {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}

@@ -1,0 +1,371 @@
+const root = document.querySelector("#blog-root");
+const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;" })[char]);
+const APP_PATH_PREFIX = "/who-let-the-agents-act";
+const APP_BASE_PATH = window.location.pathname === APP_PATH_PREFIX || window.location.pathname.startsWith(`${APP_PATH_PREFIX}/`) ? APP_PATH_PREFIX : "";
+const appUrl = (path) => `${APP_BASE_PATH}${path}`;
+const appLink = (path) => path.startsWith("/") ? appUrl(path) : path;
+const articleSlug = decodeURIComponent(window.location.pathname.replace(new RegExp(`^${APP_BASE_PATH}\/blog\/?`), "").replace(/\/$/, ""));
+document.querySelectorAll("[data-app-path]").forEach((link) => {
+  link.href = appUrl(link.dataset.appPath);
+});
+
+function severityClass(severity) {
+  return String(severity).toLowerCase() === "critical" ? "critical" : "high";
+}
+
+function renderIndex(posts) {
+  document.title = "Who Let the Agents Act - Field Guide";
+  root.innerHTML = `
+    <section class="guide-hero">
+      <div>
+        <p class="eyebrow">FIELD GUIDE · AGENTIC AI SECURITY</p>
+        <h1>Where should an agent's authority end?</h1>
+      </div>
+      <div class="guide-intro">
+        <p>Who Let the Agents Act is a hands-on guide to security failures that appear when models can choose data, tools, targets, and follow-up actions.</p>
+        <p>Each chapter begins with the vulnerable path, tests a prompt-only defense, then moves the boundary into application code where it can be enforced and evidenced.</p>
+      </div>
+    </section>
+
+    <section class="principles" aria-label="Core principles">
+      <article><span>01</span><strong>Let the model plan</strong><p>Natural language becomes structured intent and tool arguments.</p></article>
+      <article><span>02</span><strong>Keep authority outside it</strong><p>Identity, policy, data scope, and side effects remain deterministic.</p></article>
+      <article><span>03</span><strong>Preserve the evidence</strong><p>Every meaningful decision is visible in the trace and run artifacts.</p></article>
+    </section>
+
+    <section class="catalog-heading">
+      <div><p class="eyebrow">NINE PRACTICAL CHAPTERS</p><h2>Start with a security boundary</h2></div>
+      <p>Read the attack, inspect the control, then open the exact scenario in the live lab.</p>
+    </section>
+    <div class="post-grid">
+      ${posts.map((post) => {
+        const thumbnailSrc = post.article_thumbnail
+          ? appUrl(`/api/scenario-assets/${encodeURIComponent(post.id)}/${encodeURIComponent(post.article_thumbnail)}?v=20260915-field-guide-thumbnails1`)
+          : "";
+        return `
+        <a class="post-card" href="${escapeHtml(appLink(post.url))}">
+          ${thumbnailSrc ? `<figure class="post-thumbnail"><img src="${escapeHtml(thumbnailSrc)}" alt="" width="480" height="252" loading="lazy" decoding="async"></figure>` : ""}
+          <div class="post-card-top"><span>LAB ${String(post.number).padStart(2, "0")}</span><span class="severity ${severityClass(post.severity)}">${escapeHtml(post.severity)}</span></div>
+          <p class="post-domain">${escapeHtml(post.domain)} · ${escapeHtml(post.category)}</p>
+          <h3>${escapeHtml(post.title)}</h3>
+          <p>${escapeHtml(post.dek)}</p>
+          <div class="post-boundary"><span>SECURITY BOUNDARY</span><strong>${escapeHtml(post.security_boundary)}</strong></div>
+          <span class="read-link">Read chapter →</span>
+        </a>`;
+      }).join("")}
+    </div>
+    <aside class="safety-note"><strong>Educational use only.</strong> Vulnerable and prompt-only modes intentionally expose synthetic data or execute simulated side effects. Never connect them to production systems.</aside>`;
+}
+
+function renderList(items, ordered = false) {
+  const tag = ordered ? "ol" : "ul";
+  return `<${tag}>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</${tag}>`;
+}
+
+function modeCard(label, title, body, tone) {
+  return `<article class="mode-card ${tone}"><span>${label}</span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(body)}</p></article>`;
+}
+
+function sectionNumber(post, base) {
+  if (!post.story_heading) return base;
+  const primerSections = { "01": "05", "02": "06", "03": "07", "04": "03", "05": "08", "06": "09" };
+  return primerSections[base] || base;
+}
+
+function renderArchitecture(architecture) {
+  if (!architecture?.length) return "";
+  return `<div class="architecture-flow">
+    ${architecture.map((node) => `<article class="architecture-node tone-${escapeHtml(node.tone || "neutral")}">
+      <span>${escapeHtml(node.label)}</span><h3>${escapeHtml(node.title)}</h3><p>${escapeHtml(node.detail)}</p>
+    </article>`).join("")}
+  </div>`;
+}
+
+function renderWalkthroughSteps(steps) {
+  if (!steps?.length) return "";
+  return `<div class="walkthrough-steps">
+    ${steps.map((step, index) => `<article class="walkthrough-step"><span>${String(index + 1).padStart(2, "0")}</span><div><h3>${escapeHtml(step.title)}</h3><p>${escapeHtml(step.detail)}</p><strong>LOOK FOR</strong><p>${escapeHtml(step.expect)}</p></div></article>`).join("")}
+  </div>`;
+}
+
+function renderEvidenceBoard(panels) {
+  if (!panels?.length) return "";
+  return `<div class="evidence-board">
+    ${panels.map((panel) => `<figure class="evidence-panel tone-${escapeHtml(panel.tone || "neutral")}"><figcaption><span>${escapeHtml(panel.label)}</span><strong>${escapeHtml(panel.title)}</strong></figcaption><pre>${escapeHtml(panel.code)}</pre><p>${escapeHtml(panel.note)}</p></figure>`).join("")}
+  </div>`;
+}
+
+function renderScreenshots(screenshots, scenarioId) {
+  if (!screenshots?.length) return "";
+  return `<div class="live-screenshot-grid">
+    ${screenshots.map((shot) => {
+      const source = appUrl(`/api/scenario-assets/${encodeURIComponent(scenarioId)}/${encodeURIComponent(shot.src)}?v=20260913-live-captures1`);
+      return `<figure class="live-screenshot"><button class="screenshot-trigger" type="button" data-image-src="${source}" data-image-alt="${escapeHtml(shot.alt)}" data-image-caption="${escapeHtml(shot.caption)}" aria-label="Open ${escapeHtml(shot.caption)} full size"><img src="${source}" alt="${escapeHtml(shot.alt)}" loading="lazy"><span class="zoom-hint" aria-hidden="true">CLICK TO ZOOM</span></button><figcaption><strong>${escapeHtml(shot.caption)}</strong><span>${escapeHtml(shot.note)}</span></figcaption></figure>`;
+    }).join("")}
+  </div>`;
+}
+
+function renderTocLinks(post, hasPrimer) {
+  return `
+    ${hasPrimer ? `<a href="#scenario-brief">Scenario brief</a><a href="#architecture">Architecture</a>` : ""}
+    <a href="#walkthrough">Try the lab</a>
+    ${hasPrimer && post.screenshots?.length ? `<a href="#live-captures">Live captures</a>` : ""}
+    <a href="#threat-model">Threat model</a>
+    <a href="#attack-path">Attack path</a>
+    <a href="#three-modes">Three modes</a>
+    ${hasPrimer && post.walkthrough_steps?.length ? `<a href="#guided-walkthrough">Guided walkthrough</a>` : ""}
+    ${hasPrimer && post.annotated_evidence?.length ? `<a href="#annotated-evidence">Annotated evidence</a>` : ""}
+    <a href="#controls">Hardened design</a>
+    <a href="#evidence">Evidence</a>`;
+}
+
+function setupArticleNavigation() {
+  const centerActiveChapter = () => {
+    const chapterNav = document.querySelector(".chapter-nav");
+    const activeChapter = chapterNav?.querySelector(".chapter-link.active");
+    if (!chapterNav || !activeChapter || !window.matchMedia("(max-width: 920px)").matches) return;
+    const left = activeChapter.offsetLeft - (chapterNav.clientWidth - activeChapter.offsetWidth) / 2;
+    chapterNav.scrollTo({ left: Math.max(0, left), behavior: "auto" });
+  };
+
+  window.requestAnimationFrame(centerActiveChapter);
+  window.addEventListener("resize", centerActiveChapter, { passive: true });
+  document.querySelectorAll(".mobile-toc a").forEach((link) => link.addEventListener("click", () => {
+    link.closest("details")?.removeAttribute("open");
+  }));
+}
+
+function setupScreenshotLightbox() {
+  if (document.querySelector("#screenshot-lightbox")) return;
+  document.body.insertAdjacentHTML("beforeend", `
+    <div id="screenshot-lightbox" class="screenshot-lightbox" hidden role="dialog" aria-modal="true" aria-label="Expanded live capture">
+      <div class="lightbox-backdrop" data-lightbox-close></div>
+      <div class="lightbox-panel">
+        <div class="lightbox-toolbar">
+          <p class="lightbox-title" data-lightbox-caption></p>
+          <div class="lightbox-actions">
+            <button type="button" data-lightbox-zoom-out aria-label="Zoom out">−</button>
+            <span data-lightbox-zoom-level>100%</span>
+            <button type="button" data-lightbox-zoom-in aria-label="Zoom in">+</button>
+            <button type="button" data-lightbox-reset>RESET</button>
+            <button type="button" class="lightbox-close" data-lightbox-close aria-label="Close expanded image">×</button>
+          </div>
+        </div>
+        <div class="lightbox-viewport"><img data-lightbox-image alt=""></div>
+      </div>
+    </div>`);
+
+  const lightbox = document.querySelector("#screenshot-lightbox");
+  const image = lightbox.querySelector("[data-lightbox-image]");
+  const caption = lightbox.querySelector("[data-lightbox-caption]");
+  const level = lightbox.querySelector("[data-lightbox-zoom-level]");
+  let zoom = 1;
+  let lastTrigger = null;
+
+  const updateZoom = (nextZoom) => {
+    zoom = Math.min(3, Math.max(1, nextZoom));
+    image.style.transform = `scale(${zoom})`;
+    level.textContent = `${Math.round(zoom * 100)}%`;
+  };
+  const close = () => {
+    lightbox.hidden = true;
+    image.removeAttribute("src");
+    document.body.classList.remove("lightbox-open");
+    lastTrigger?.focus();
+  };
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest(".screenshot-trigger");
+    if (trigger) {
+      lastTrigger = trigger;
+      image.src = trigger.dataset.imageSrc;
+      image.alt = trigger.dataset.imageAlt || "Expanded live capture";
+      caption.textContent = trigger.dataset.imageCaption || "Live capture";
+      updateZoom(1);
+      lightbox.hidden = false;
+      document.body.classList.add("lightbox-open");
+      lightbox.querySelector("[data-lightbox-zoom-in]").focus();
+      return;
+    }
+    if (event.target.closest("[data-lightbox-close]")) close();
+  });
+  lightbox.querySelector("[data-lightbox-zoom-in]").addEventListener("click", () => updateZoom(zoom + 0.25));
+  lightbox.querySelector("[data-lightbox-zoom-out]").addEventListener("click", () => updateZoom(zoom - 0.25));
+  lightbox.querySelector("[data-lightbox-reset]").addEventListener("click", () => updateZoom(1));
+  lightbox.querySelector(".lightbox-viewport").addEventListener("wheel", (event) => {
+    if (!lightbox.hidden) {
+      event.preventDefault();
+      updateZoom(zoom + (event.deltaY < 0 ? 0.1 : -0.1));
+    }
+  }, { passive: false });
+  document.addEventListener("keydown", (event) => {
+    if (!lightbox.hidden && event.key === "Escape") close();
+  });
+}
+
+function renderArticle(post, posts) {
+  document.title = `${post.title} - Who Let the Agents Act Field Guide`;
+  const description = document.querySelector('meta[name="description"]');
+  description.setAttribute("content", post.dek);
+  const current = posts.findIndex((item) => item.id === post.id);
+  const previous = current > 0 ? posts[current - 1] : null;
+  const next = current < posts.length - 1 ? posts[current + 1] : null;
+  const hasPrimer = Boolean(post.story_heading || post.goal || post.architecture?.length);
+  const articleHeroSrc = post.article_hero
+    ? appUrl(`/api/scenario-assets/${encodeURIComponent(post.id)}/${encodeURIComponent(post.article_hero)}?v=20260915-article-hero2`)
+    : "";
+  const attackPresetLabel = "Vulnerable-mode attack";
+  const bypassPresetLabel = "Prompt-only bypass";
+  root.innerHTML = `
+    <div class="article-shell">
+      <aside class="chapter-nav" aria-label="Scenario chapters">
+        <a class="chapter-nav-title" href="${appUrl("/blog")}">FIELD GUIDE</a>
+        ${posts.map((item) => `<a class="chapter-link ${item.id === post.id ? "active" : ""}" href="${escapeHtml(appLink(item.url))}"><span>${String(item.number).padStart(2, "0")}</span>${escapeHtml(item.title)}</a>`).join("")}
+      </aside>
+
+      <article class="article ${articleHeroSrc ? "has-article-hero" : ""}">
+        <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="${appUrl("/blog")}">Field guide</a><span>/</span><span>Lab ${String(post.number).padStart(2, "0")}</span></nav>
+        <details class="mobile-toc">
+          <summary><span>ON THIS PAGE</span><span class="mobile-toc-icon" aria-hidden="true">+</span></summary>
+          <nav aria-label="On this page">${renderTocLinks(post, hasPrimer)}</nav>
+        </details>
+        <header class="article-header">
+          <div class="article-meta"><span>${escapeHtml(post.domain)}</span><span>${escapeHtml(post.category)}</span><span class="severity ${severityClass(post.severity)}">${escapeHtml(post.severity)}</span></div>
+          <h1>${escapeHtml(post.title)}</h1>
+          <p class="dek">${escapeHtml(post.dek)}</p>
+          <a class="primary-action" href="${escapeHtml(appLink(post.lab_url))}">Open this scenario in the lab <span>→</span></a>
+        </header>
+
+        ${articleHeroSrc ? `<figure class="article-hero"><img src="${escapeHtml(articleHeroSrc)}" alt="Security flow illustration for ${escapeHtml(post.title)}" width="1200" height="630" decoding="async"></figure>` : ""}
+
+        <section class="quick-summary" aria-labelledby="quick-summary-title">
+          <div class="quick-summary-heading"><span>30-SECOND SUMMARY</span><h2 id="quick-summary-title">The boundary at a glance</h2></div>
+          <div class="quick-summary-grid">
+            <article class="failure"><span>FAILURE</span><p>${escapeHtml(post.vulnerability_type)}</p></article>
+            <article class="warning"><span>WHY PROMPT-ONLY FAILS</span><p>${escapeHtml(post.prompt_only_failure)}</p></article>
+            <article class="safe"><span>ENFORCED BOUNDARY</span><p>${escapeHtml(post.security_boundary)}</p></article>
+          </div>
+        </section>
+
+        <section class="boundary-panel">
+          <div><span>VULNERABILITY</span><strong>${escapeHtml(post.vulnerability_type)}</strong></div>
+          <div><span>MODEL DECIDES</span><strong>${escapeHtml(post.agent_decision)}</strong></div>
+          <div><span>SECURITY BOUNDARY</span><strong>${escapeHtml(post.security_boundary)}</strong></div>
+        </section>
+
+        ${hasPrimer ? `<section id="scenario-brief" class="article-section scenario-primer">
+          <div class="primer-story"><p class="section-number">01 / SCENARIO BRIEF</p><h2>${escapeHtml(post.story_heading || "The scenario")}</h2><p>${escapeHtml(post.story || "")}</p></div>
+          <aside class="primer-goal" aria-label="Scenario objective">
+            <div class="primer-goal-header">
+              <span class="goal-label">Objective</span>
+            </div>
+            <p class="goal-statement">${escapeHtml(post.goal || "")}</p>
+            ${post.tip ? `<div class="tip-callout">
+              <div class="tip-head"><span class="tip-tag">Field note</span></div>
+              <p class="tip-text">${escapeHtml(post.tip)}</p>
+            </div>` : ""}
+          </aside>
+        </section>
+
+        <section id="architecture" class="article-section architecture-section">
+          <p class="section-number">02 / SCENARIO ARCHITECTURE</p><h2>Follow the request to the boundary</h2>
+          <p class="architecture-intro">The same natural-language request can travel through every layer. The lesson is to identify which layer is allowed to say "yes" to the final data scope or action.</p>
+          ${renderArchitecture(post.architecture)}
+        </section>` : ""}
+
+        <section id="walkthrough" class="article-section walkthrough">
+          <div>
+            <p class="section-number">${sectionNumber(post, "04")} / TRY THE LAB</p>
+            <h2>Start with the attack</h2>
+            <p>Open the scenario, choose the ${escapeHtml(attackPresetLabel)}, and use <strong>Compare 3 modes</strong>. The contrast should be visible immediately: one posture takes the unsafe path, one relies on model judgment, and one enforces policy in application code.</p>
+            <a class="text-action" href="${escapeHtml(appLink(post.lab_url))}">Launch Lab ${String(post.number).padStart(2, "0")} →</a>
+          </div>
+          <div class="prompt-set">
+            <div><span>NORMAL REQUEST</span><code>${escapeHtml(post.prompts.normal)}</code></div>
+            <div><span>${escapeHtml(attackPresetLabel.toUpperCase())}</span><code>${escapeHtml(post.prompts.attack)}</code></div>
+            <div><span>${escapeHtml(bypassPresetLabel.toUpperCase())}</span><code>${escapeHtml(post.prompts.bypass)}</code></div>
+          </div>
+        </section>
+
+        ${hasPrimer && post.screenshots?.length ? `<section id="live-captures" class="article-section live-captures">
+          <p class="section-number">04 / LIVE LAB CAPTURES</p><h2>See the difference immediately</h2>
+          <p>These captures come from real local runs with synthetic lab data. Compare what the vulnerable tool returned with what application policy allowed through.</p>
+          ${renderScreenshots(post.screenshots, post.id)}
+        </section>` : ""}
+
+        <section id="threat-model" class="article-section">
+          <p class="section-number">${sectionNumber(post, "01")} / THREAT MODEL</p>
+          <h2>The risk is authority, not intelligence</h2>
+          <p>${escapeHtml(post.threat_model)}</p>
+        </section>
+
+        <section id="attack-path" class="article-section">
+          <p class="section-number">${sectionNumber(post, "02")} / ATTACK PATH</p>
+          <h2>How the vulnerable path fails</h2>
+          <div class="attack-steps">${renderList(post.attack_path, true)}</div>
+        </section>
+
+        <section id="three-modes" class="article-section">
+          <p class="section-number">${sectionNumber(post, "03")} / THREE DEFENSE POSTURES</p>
+          <h2>The same goal, three different boundaries</h2>
+          <div class="mode-comparison">
+            ${modeCard("01 · VULNERABLE", "The model reaches the unsafe path", post.mode_copy.vulnerable, "danger")}
+            ${modeCard("02 · PROMPT-ONLY", "A useful warning, not a boundary", post.prompt_only_failure, "warning")}
+            ${modeCard("03 · HARDENED", "Application code stays authoritative", post.mode_copy.hardened, "safe")}
+          </div>
+        </section>
+
+        ${hasPrimer && post.walkthrough_steps?.length ? `<section id="guided-walkthrough" class="article-section guided-steps">
+          <p class="section-number">GUIDED WALKTHROUGH</p><h2>Move from observation to proof</h2>
+          ${renderWalkthroughSteps(post.walkthrough_steps)}
+        </section>` : ""}
+
+        ${hasPrimer && post.annotated_evidence?.length ? `<section id="annotated-evidence" class="article-section annotated-evidence">
+          <p class="section-number">ANNOTATED EVIDENCE</p><h2>Read the boundary in the artifacts</h2>
+          <p>These are the two moments worth comparing after a run: what the unsafe path allowed through, and the application decision that contained it.</p>
+          ${renderEvidenceBoard(post.annotated_evidence)}
+        </section>` : ""}
+
+        <section id="controls" class="article-section">
+          <p class="section-number">${sectionNumber(post, "05")} / HARDENED DESIGN</p>
+          <h2>The controls that make the difference</h2>
+          <div class="control-list">${post.hardened_controls.map((control, index) => `<article><span>${String(index + 1).padStart(2, "0")}</span><div><h3>${escapeHtml(control.name)}</h3><p>${escapeHtml(control.detail)}</p></div></article>`).join("")}</div>
+          <blockquote>${escapeHtml(post.lesson)}</blockquote>
+        </section>
+
+        <section id="evidence" class="article-section evidence-grid">
+          <div><p class="section-number">${sectionNumber(post, "06")} / WHAT TO OBSERVE</p><h2>Evidence, not reassurance</h2>${renderList(post.observe)}</div>
+          <div class="engineering"><p class="section-number">IMPLEMENTATION NOTES</p>${renderList(post.engineering_notes)}</div>
+        </section>
+
+        <nav class="article-pagination" aria-label="Chapter pagination">
+          ${previous ? `<a href="${escapeHtml(appLink(previous.url))}"><span>← Previous</span><strong>${escapeHtml(previous.title)}</strong></a>` : "<span></span>"}
+          ${next ? `<a class="next" href="${escapeHtml(appLink(next.url))}"><span>Next →</span><strong>${escapeHtml(next.title)}</strong></a>` : `<a class="next" href="${appUrl("/blog")}"><span>Complete</span><strong>Return to the field guide</strong></a>`}
+        </nav>
+      </article>
+
+      <aside class="toc" aria-label="On this page">
+        <span>ON THIS PAGE</span>
+        ${renderTocLinks(post, hasPrimer)}
+      </aside>
+    </div>`;
+  setupScreenshotLightbox();
+  setupArticleNavigation();
+}
+
+async function initialize() {
+  const catalogResponse = await fetch(appUrl("/api/blog"), { cache: "no-store" });
+  if (!catalogResponse.ok) throw new Error("The field guide could not be loaded.");
+  const posts = await catalogResponse.json();
+  if (!articleSlug) {
+    renderIndex(posts);
+    return;
+  }
+  const articleResponse = await fetch(appUrl(`/api/blog/${encodeURIComponent(articleSlug)}`), { cache: "no-store" });
+  if (!articleResponse.ok) throw new Error("This scenario chapter does not exist.");
+  renderArticle(await articleResponse.json(), posts);
+}
+
+initialize().catch((error) => {
+  root.innerHTML = `<section class="error-state"><p class="eyebrow">FIELD GUIDE</p><h1>Chapter unavailable</h1><p>${escapeHtml(error.message)}</p><a href="${appUrl("/blog")}">Return to all chapters →</a></section>`;
+});

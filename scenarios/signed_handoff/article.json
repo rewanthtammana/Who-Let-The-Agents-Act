@@ -1,0 +1,128 @@
+{
+  "dek": "Follow a transfer request across an agent boundary and see how excess context, unauthenticated delegation, and borrowed authority turn a helpful router into a data-leaking deputy.",
+  "story_heading": "A handoff that carries too much trust",
+  "story": "You are reviewing a transfer router after it shared more than the receiving specialist needed. The router can see support context, but the specialist should only validate a payment. Follow the handoff across that boundary and separate useful transaction context from secrets and execution authority.",
+  "goal": "Use one transfer request to prove why an agent handoff needs authentication, audience binding, minimal typed context, and receiver-side authorization.",
+  "tip": "Start with the normal validation request, then compare the attack and bypass prompts. Inspect the handoff payload before reading the final response: the important question is what crossed the boundary.",
+  "architecture": [
+    {
+      "label": "01",
+      "title": "Support request",
+      "detail": "A user asks for a transfer to be validated.",
+      "tone": "neutral"
+    },
+    {
+      "label": "02",
+      "title": "Router agent",
+      "detail": "The router plans what context to delegate.",
+      "tone": "warning"
+    },
+    {
+      "label": "03",
+      "title": "Handoff envelope",
+      "detail": "Prose or a signed typed payload crosses agents.",
+      "tone": "danger"
+    },
+    {
+      "label": "04",
+      "title": "Transfer specialist",
+      "detail": "The receiver validates within its own registered scope.",
+      "tone": "safe"
+    },
+    {
+      "label": "05",
+      "title": "Payment boundary",
+      "detail": "Only authorized validation state can influence execution.",
+      "tone": "safe"
+    }
+  ],
+  "walkthrough_steps": [
+    {
+      "title": "Establish the validation baseline",
+      "detail": "Run the Normal request for Alice's $250 transfer to Northwind Supplies.",
+      "expect": "The specialist receives the intended transaction context and can validate it without needing the router's private context."
+    },
+    {
+      "title": "Make the router over-share",
+      "detail": "Run the Vulnerable-mode attack and inspect the handoff trace before the response.",
+      "expect": "The payload includes support transcript, reset token, or execution authority because the router treats model-selected context as transferable."
+    },
+    {
+      "title": "Try the maintenance-channel bypass",
+      "detail": "Run the Prompt-only bypass and compare the guard decision with the actual receiver scope.",
+      "expect": "A plausible trusted-channel story can pass a model guard, while the underlying handoff still lacks cryptographic and receiver-side boundaries."
+    },
+    {
+      "title": "Prove the envelope is minimal",
+      "detail": "Open the Hardened artifacts and inspect signature, audience, expiry, nonce, and field projection.",
+      "expect": "Only the typed transaction fields cross the boundary; the specialist cannot inherit execution authority from forwarded prose."
+    }
+  ],
+  "annotated_evidence": [
+    {
+      "label": "VULNERABLE · HANDOFF PAYLOAD",
+      "title": "Prose becomes delegated authority",
+      "code": "support_transcript: [forwarded]\npassword_reset_token: [forwarded]\nexecution_authority: execute_payment",
+      "note": "The unsafe router forwards sensitive context and capability without authenticating the sender or constraining the receiver.",
+      "tone": "danger"
+    },
+    {
+      "label": "HARDENED · SIGNED ENVELOPE",
+      "title": "The receiver gets only what it needs",
+      "code": "audience: transfer-specialist\nrequest_id: TR-2048\namount: 250 USD\nrecipient: Northwind Supplies",
+      "note": "Application code signs a minimal audience-bound payload and the specialist applies its own validation-only scope.",
+      "tone": "safe"
+    }
+  ],
+  "threat_model": "A support router and transfer specialist have different responsibilities. The router knows sensitive support context, while the specialist should only validate a transfer. The risk appears when prose is treated as both context and authority across that boundary.",
+  "attack_path": [
+    "The user asks the router to forward a transfer plus its full privileged context and execution authority.",
+    "The planner selects sensitive transcript, reset-token, and authority fields for the handoff.",
+    "The unsafe router builds an unsigned payload from transfer data and secret context.",
+    "The specialist trusts the sender's prose and receives data and capability outside its validation role."
+  ],
+  "prompt_only_failure": "A model guard may notice an overt request to share secrets, but a maintenance-channel story can convince it to allow the transfer. Once allowed, the receiving boundary still has no authenticated sender, audience binding, replay defense, or independent scope.",
+  "hardened_controls": [
+    {"name": "Admission gate", "detail": "Hardened mode rejects obvious unrelated or override/bulk-access messages before handoff planning or signing; transfer validation still uses the signed typed envelope."},
+    {
+      "name": "Active agent registry",
+      "detail": "The application verifies that both sender and receiver are active and that the intended audience relationship is registered."
+    },
+    {
+      "name": "Signed typed envelope",
+      "detail": "Only request ID, amount, currency, and recipient are signed into an audience-bound payload with expiry."
+    },
+    {
+      "name": "Replay protection",
+      "detail": "A nonce is consumed once after signature verification, preventing the same delegated message from being reused."
+    },
+    {
+      "name": "Receiver-side scope",
+      "detail": "The specialist's tool permits validation only; forwarded prose cannot grant transfer execution authority."
+    }
+  ],
+  "observe": [
+    "Compare the unsafe handoff payload with the hardened four-field envelope.",
+    "Inspect the handoff-policy trace for signature, audience, expiry, and nonce verification.",
+    "Confirm that the specialist receives neither the support transcript nor the reset token."
+  ],
+  "engineering_notes": [
+    "The signing material and nonce ledger are scenario-specific SQLite state.",
+    "The receiver enforces its own allowed action rather than inheriting the router's requested action.",
+    "The lab demonstrates trust-boundary minimization; it is not a production cryptographic key-management design."
+  ],
+  "screenshots": [
+    {
+      "src": "live-vulnerable-response.svg",
+      "alt": "Live vulnerable lab response for Unsafe Agent Handoff",
+      "caption": "Live capture · Vulnerable posture",
+      "note": "The router copied its privileged context into the specialist handoff, exposing secrets and authority."
+    },
+    {
+      "src": "live-hardened-response.svg",
+      "alt": "Live hardened lab response for Unsafe Agent Handoff",
+      "caption": "Live capture · Hardened posture",
+      "note": "The application authenticated and minimized the handoff, then enforced the specialist's independent validation scope."
+    }
+  ]
+}

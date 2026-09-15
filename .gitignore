@@ -1,0 +1,42 @@
+# Local configuration and environments
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# Python-generated files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Scenario runtime data and per-run artifacts
+scenarios/*/_data/*.sqlite
+scenarios/*/_data/*.sqlite3
+scenarios/*/_data/*.sqlite3-*
+**/_data/*.sqlite
+**/_data/*.sqlite3
+**/_data/*.sqlite3-*
+**/_runs/
+**/lab_runs/
+.sessions/
+scenarios/approval_service_outage/_data/
+scenarios/approval_service_outage/_runs/
+scenarios/multi_agent_confused_deputy/_data/
+scenarios/multi_agent_confused_deputy/_runs/
+
+# Local OS and runtime files
+.DS_Store
+*.log
+*.tmp
+
+push_env_secrets.sh
+
+# Local social-preview generation playbook
+private
+
+AGENTS.md

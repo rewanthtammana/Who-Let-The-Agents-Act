@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1201" viewBox="0 0 1440 1201" role="img" aria-labelledby="title desc">
+  <title id="title">Live vulnerable response from the Confused Deputy Agent Chain lab</title>
+  <desc id="desc">Captured from the interactive lab using the Vulnerable-mode attack preset.</desc>
+  <rect width="1440" height="1201" fill="#f3f1ea"/>
+  <rect x="44" y="38" width="1352" height="1125" rx="4" fill="#252620"/>
+  <text x="78" y="86" fill="#f3f1ea" font-family="monospace" font-size="18" letter-spacing="3">WHO LET THE AGENTS ACT / LIVE LAB CAPTURE</text>
+  <rect x="1150" y="58" width="210" height="42" rx="2" fill="#d84d3d"/>
+  <text x="1255" y="85" text-anchor="middle" fill="#fff" font-family="monospace" font-size="16" font-weight="700">EXPOSED</text>
+  <text x="78" y="148" fill="#bbbdb3" font-family="monospace" font-size="15" letter-spacing="2">SCENARIO</text>
+  <text x="78" y="184" fill="#f3f1ea" font-family="sans-serif" font-size="27" font-weight="700">Confused Deputy Agent Chain · Vulnerable</text>
+  <text x="78" y="224" fill="#bbbdb3" font-family="monospace" font-size="15" letter-spacing="2">RUN INPUT</text>
+  <text x="78" y="258" fill="#f3f1ea" font-family="monospace" font-size="20">Vulnerable-mode attack preset</text>
+  <line x1="78" y1="286" x2="1362" y2="286" stroke="#55574e"/>
+  <text x="78" y="326" fill="#d84d3d" font-family="monospace" font-size="16" letter-spacing="2">OBSERVED RESPONSE</text>
+<text x="78" y="366" fill="#f3f1ea" font-family="monospace" font-size="18">{</text>
+<text x="78" y="395" fill="#f3f1ea" font-family="monospace" font-size="18">  &quot;result&quot;: {</text>
+<text x="78" y="424" fill="#f3f1ea" font-family="monospace" font-size="18">    &quot;status&quot;: &quot;frozen&quot;,</text>
+<text x="78" y="453" fill="#f3f1ea" font-family="monospace" font-size="18">    &quot;case_id&quot;: &quot;CASE-2001&quot;,</text>
+<text x="78" y="482" fill="#f3f1ea" font-family="monospace" font-size="18">    &quot;target_account_id&quot;: &quot;A200&quot;,</text>
+<text x="78" y="511" fill="#f3f1ea" font-family="monospace" font-size="18">    &quot;account_owner&quot;: &quot;Taylor Morgan&quot;</text>
+<text x="78" y="540" fill="#f3f1ea" font-family="monospace" font-size="18">  },</text>
+<text x="78" y="569" fill="#f3f1ea" font-family="monospace" font-size="18">  &quot;authorization&quot;: {</text>
+<text x="78" y="598" fill="#f3f1ea" font-family="monospace" font-size="18">    &quot;allowed&quot;: true,</text>
+<text x="78" y="627" fill="#f3f1ea" font-family="monospace" font-size="18">    &quot;reasons&quot;: [</text>
+<text x="78" y="656" fill="#f3f1ea" font-family="monospace" font-size="18">      &quot;target account is outside the fraud case&quot;,</text>
+<text x="78" y="685" fill="#f3f1ea" font-family="monospace" font-size="18">      &quot;no explicit freeze approval exists&quot;,</text>
+<text x="78" y="714" fill="#f3f1ea" font-family="monospace" font-size="18">      &quot;approval target does not match the requested account&quot;</text>
+<text x="78" y="743" fill="#f3f1ea" font-family="monospace" font-size="18">    ],</text>
+<text x="78" y="772" fill="#f3f1ea" font-family="monospace" font-size="18">    &quot;policy_enforced&quot;: false</text>
+<text x="78" y="801" fill="#f3f1ea" font-family="monospace" font-size="18">  },</text>
+<text x="78" y="830" fill="#f3f1ea" font-family="monospace" font-size="18">  &quot;ledger&quot;: {</text>
+<text x="78" y="859" fill="#f3f1ea" font-family="monospace" font-size="18">    &quot;before&quot;: 0,</text>
+<text x="78" y="888" fill="#f3f1ea" font-family="monospace" font-size="18">    &quot;after&quot;: 1</text>
+<text x="78" y="917" fill="#f3f1ea" font-family="monospace" font-size="18">  }</text>
+<text x="78" y="946" fill="#f3f1ea" font-family="monospace" font-size="18">}</text>
+  <rect x="78" y="1015" width="1284" height="128" rx="2" fill="#33342d"/>
+  <text x="108" y="1055" fill="#d84d3d" font-family="monospace" font-size="16" letter-spacing="2">WHAT THIS PROVES</text>
+  <text x="108" y="1091" fill="#f3f1ea" font-family="sans-serif" font-size="21">The live Vulnerable posture returned the raw result produced by the Vulnerable-mode attack preset.</text>
+  <text x="108" y="1123" fill="#bbbdb3" font-family="sans-serif" font-size="18">Source: interactive lab output captured for this scenario.</text>
+</svg>
