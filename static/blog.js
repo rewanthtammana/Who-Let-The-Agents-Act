@@ -1,7 +1,8 @@
 const root = document.querySelector("#blog-root");
 const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;" })[char]);
 const APP_PATH_PREFIX = "/who-let-the-agents-act";
-const APP_BASE_PATH = window.location.pathname === APP_PATH_PREFIX || window.location.pathname.startsWith(`${APP_PATH_PREFIX}/`) ? APP_PATH_PREFIX : "";
+const configuredBasePath = document.querySelector('meta[name="wlaa-base-path"]')?.content || "";
+const APP_BASE_PATH = configuredBasePath || (window.location.pathname === APP_PATH_PREFIX || window.location.pathname.startsWith(`${APP_PATH_PREFIX}/`) ? APP_PATH_PREFIX : "");
 const appUrl = (path) => `${APP_BASE_PATH}${path}`;
 const appLink = (path) => path.startsWith("/") ? appUrl(path) : path;
 const articleSlug = decodeURIComponent(window.location.pathname.replace(new RegExp(`^${APP_BASE_PATH}\/blog\/?`), "").replace(/\/$/, ""));

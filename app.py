@@ -36,10 +36,13 @@ from scenarios.registry import DATABASE, INJECTION_ROOT, SCENARIOS
 ROOT = Path(__file__).resolve().parent
 PUBLIC_SITE_ROOT = "https://rewanthtammana.com/who-let-the-agents-act"
 PUBLIC_ASSET_ORIGIN = "https://who-let-the-agents-act.rewanthtammana.com"
+PUBLIC_APP_BASE_PATH = os.getenv("PUBLIC_APP_BASE_PATH", "/who-let-the-agents-act")
 APP_STYLESHEET_VERSION = "20260915-mobile-console2"
+APP_SCRIPT_VERSION = "20260915-basepath1"
 BLOG_ASSET_VERSION = "20260915-mobile-guide5"
 SITE_HEADER_ASSET_VERSION = "20260915-unified1"
 GITHUB_CALLOUT_ASSET_VERSION = "20260915-callout6"
+GITHUB_CALLOUT_SCRIPT_VERSION = "20260915-basepath1"
 SESSION_ROOT = ROOT / ".sessions"
 SESSION_COOKIE = "who_let_the_agents_act_session"
 SESSION_TTL_SECONDS = int(os.getenv("SESSION_TTL_SECONDS", str(30 * 60)))
@@ -266,6 +269,16 @@ class SlidingWindowRateLimitMiddleware(BaseHTTPMiddleware):
 
 
 @app.middleware("http")
+async def app_base_path_middleware(request: Request, call_next):
+    base_path = normalize_base_path(PUBLIC_APP_BASE_PATH)
+    if base_path and request.scope["path"] == base_path:
+        request.scope["path"] = "/"
+    elif base_path and request.scope["path"].startswith(f"{base_path}/"):
+        request.scope["path"] = request.scope["path"][len(base_path):]
+    return await call_next(request)
+
+
+@app.middleware("http")
 async def browser_security_middleware(request: Request, call_next):
     """Reject cross-origin state changes and add baseline browser protections."""
     if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
@@ -386,16 +399,76 @@ def render_app_assets(template: str, request: Request) -> str:
     """Use local assets in development and the stable asset host in production."""
     hostname = request.url.hostname or ""
     asset_origin = "" if hostname in {"127.0.0.1", "localhost"} else PUBLIC_ASSET_ORIGIN
+    base_path = request_base_path(request)
     replacements = {
+        "__APP_BASE_PATH_ATTR__": html.escape(base_path, quote=True),
         "__APP_STYLESHEET_URL__": f"{asset_origin}/static/styles.css?v={APP_STYLESHEET_VERSION}",
+        "__APP_SCRIPT_URL__": f"{asset_origin}/static/app.js?v={APP_SCRIPT_VERSION}",
         "__BLOG_STYLESHEET_URL__": f"{asset_origin}/static/blog.css?v={BLOG_ASSET_VERSION}",
         "__BLOG_SCRIPT_URL__": f"{asset_origin}/static/blog.js?v={BLOG_ASSET_VERSION}",
         "__SITE_HEADER_STYLESHEET_URL__": f"{asset_origin}/static/site-header.css?v={SITE_HEADER_ASSET_VERSION}",
         "__GITHUB_CALLOUT_STYLESHEET_URL__": f"{asset_origin}/static/github-callout.css?v={GITHUB_CALLOUT_ASSET_VERSION}",
+        "__GITHUB_CALLOUT_SCRIPT_URL__": f"{asset_origin}/static/github-callout.js?v={GITHUB_CALLOUT_SCRIPT_VERSION}",
     }
     for token, value in replacements.items():
         template = template.replace(token, value)
+    template = rewrite_app_path_hrefs(template, base_path)
     return template
+
+
+def normalize_base_path(value: str) -> str:
+    value = value.strip()
+    if not value or value == "/":
+        return ""
+    return "/" + value.strip("/")
+
+
+def request_base_path(request: Request) -> str:
+    hostname = request.url.hostname or ""
+    forwarded_prefix = request.headers.get("x-forwarded-prefix")
+    if forwarded_prefix:
+        return normalize_base_path(forwarded_prefix)
+    if hostname in {"127.0.0.1", "localhost"} or hostname.endswith(".localhost"):
+        return ""
+    return normalize_base_path(PUBLIC_APP_BASE_PATH)
+
+
+def app_path(request: Request, path: str) -> str:
+    if path.startswith("#") or re.match(r"^[a-z][a-z0-9+.-]*:", path, re.IGNORECASE):
+        return path
+    if not path.startswith("/"):
+        path = "/" + path
+    base_path = request_base_path(request)
+    if path == "/":
+        return base_path or "/"
+    return f"{base_path}{path}"
+
+
+def rewrite_app_path_hrefs(template: str, base_path: str) -> str:
+    def replace_tag(match: re.Match[str]) -> str:
+        tag = match.group(0)
+        path_match = re.search(r'data-app-path="([^"]+)"', tag)
+        if not path_match:
+            return tag
+        path = path_match.group(1)
+        if path.startswith("#"):
+            href = path
+        elif path == "/":
+            href = base_path or "/"
+        elif path.startswith("/"):
+            href = f"{base_path}{path}"
+        else:
+            href = f"{base_path}/{path}" if base_path else f"/{path}"
+        escaped_href = html.escape(href, quote=True)
+        if re.search(r'href="[^"]*"', tag):
+            return re.sub(r'href="[^"]*"', f'href="{escaped_href}"', tag, count=1)
+        return tag[:-1] + f' href="{escaped_href}">'
+
+    return re.sub(r"<a\b[^>]*\bdata-app-path=\"[^\"]+\"[^>]*>", replace_tag, template)
+
+
+def redirect_app_path(request: Request, path: str) -> RedirectResponse:
+    return RedirectResponse(app_path(request, path), status_code=308)
 
 
 def render_initial_page(template: str, request: Request, scenario_config: dict[str, object] | None = None) -> str:
@@ -459,8 +532,8 @@ def home(request: Request) -> HTMLResponse:
 
 
 @app.get("/labs")
-def labs_index() -> RedirectResponse:
-    return RedirectResponse("/", status_code=308)
+def labs_index(request: Request) -> RedirectResponse:
+    return redirect_app_path(request, "/")
 
 
 @app.get("/lab/{scenario_id}")
@@ -483,10 +556,10 @@ def scenario_lab(scenario_id: str, request: Request) -> HTMLResponse:
 
 
 @app.get("/labs/{scenario_id}")
-def legacy_scenario_lab(scenario_id: str) -> RedirectResponse:
+def legacy_scenario_lab(scenario_id: str, request: Request) -> RedirectResponse:
     if scenario_id not in SCENARIOS:
         raise HTTPException(status_code=404, detail="Scenario not found")
-    return RedirectResponse(f"/lab/{scenario_id}", status_code=308)
+    return redirect_app_path(request, f"/lab/{scenario_id}")
 
 
 def blog_post_payload(scenario_id: str) -> dict[str, object]:

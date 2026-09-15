@@ -1,6 +1,7 @@
 (function () {
   const appPathPrefix = "/who-let-the-agents-act";
-  const APP_BASE_PATH = window.location.pathname === appPathPrefix || window.location.pathname.startsWith(`${appPathPrefix}/`) ? appPathPrefix : "";
+  const configuredBasePath = document.querySelector('meta[name="wlaa-base-path"]')?.content || "";
+  const APP_BASE_PATH = configuredBasePath || (window.location.pathname === appPathPrefix || window.location.pathname.startsWith(`${appPathPrefix}/`) ? appPathPrefix : "");
   function updateCount(selector, value) {
     const count = Number(value);
     const available = Number.isFinite(count) && count >= 0;
