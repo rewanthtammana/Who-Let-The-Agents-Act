@@ -36,10 +36,10 @@ from scenarios.registry import DATABASE, INJECTION_ROOT, SCENARIOS
 ROOT = Path(__file__).resolve().parent
 PUBLIC_SITE_ROOT = "https://rewanthtammana.com/who-let-the-agents-act"
 PUBLIC_ASSET_ORIGIN = "https://who-let-the-agents-act.rewanthtammana.com"
-APP_STYLESHEET_VERSION = "20260915-mobile-console1"
-BLOG_ASSET_VERSION = "20260915-mobile-guide2"
+APP_STYLESHEET_VERSION = "20260915-mobile-console2"
+BLOG_ASSET_VERSION = "20260915-mobile-guide5"
 SITE_HEADER_ASSET_VERSION = "20260915-unified1"
-GITHUB_CALLOUT_ASSET_VERSION = "20260915-callout4"
+GITHUB_CALLOUT_ASSET_VERSION = "20260915-callout6"
 SESSION_ROOT = ROOT / ".sessions"
 SESSION_COOKIE = "who_let_the_agents_act_session"
 SESSION_TTL_SECONDS = int(os.getenv("SESSION_TTL_SECONDS", str(30 * 60)))

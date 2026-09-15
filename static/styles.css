@@ -45,7 +45,7 @@ button, textarea { font: inherit; }
 .status { display: flex; align-items: center; gap: 14px; color: var(--green); font: 500 11px DM Mono, monospace; text-align: right; white-space: nowrap; flex-shrink: 0; }
 .theme-toggle { min-height: 32px; padding: 7px 9px; border: 1px solid var(--line); color: var(--muted); background: transparent; font: 500 10px DM Mono, monospace; letter-spacing: .04em; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
 .theme-toggle:hover, .theme-toggle[aria-pressed="true"] { color: var(--ink); border-color: var(--line-strong); background: var(--panel); }
-main { width: min(1480px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 72px; }
+main { width: min(1480px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 24px; }
 .hero { display: flex; justify-content: space-between; align-items: start; gap: 24px; margin-bottom: 24px; }
 .hero-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 150px; }
 .scenario-focused .scenario-library { display: none; }
