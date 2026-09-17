@@ -1,4 +1,7 @@
 {$DOMAIN} {
     encode gzip
+    # This marker is replaced by scripts/render_caddyfile.sh only when
+    # ACCESS_LOG_ENABLED is explicitly enabled.
+    # ACCESS_LOG_PLACEHOLDER
     reverse_proxy who-let-the-agents-act:8000
 }

@@ -49,12 +49,20 @@ services:
     image: caddy:2-alpine
     environment:
       DOMAIN: ${DOMAIN:?Set DOMAIN in .env}
+      ACCESS_LOG_ENABLED: ${ACCESS_LOG_ENABLED:-0}
+      ACCESS_LOG_PATH: ${ACCESS_LOG_PATH:-/var/log/caddy/access.json}
+      ACCESS_LOG_ROLL_SIZE: ${ACCESS_LOG_ROLL_SIZE:-100MiB}
+      ACCESS_LOG_ROLL_KEEP: ${ACCESS_LOG_ROLL_KEEP:-90}
+      ACCESS_LOG_ROLL_KEEP_FOR: ${ACCESS_LOG_ROLL_KEEP_FOR:-2160h}
+    command: ["/bin/sh", "/usr/local/bin/render_caddyfile.sh"]
     ports:
       - "80:80"
       - "443:443"
       - "443:443/udp"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile.template:ro
+      - ./scripts/render_caddyfile.sh:/usr/local/bin/render_caddyfile.sh:ro
+      - ./logs/caddy:/var/log/caddy
       - who-let-the-agents-act_caddy_data:/data
       - who-let-the-agents-act_caddy_config:/config
     depends_on:

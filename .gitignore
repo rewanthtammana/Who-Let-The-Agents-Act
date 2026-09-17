@@ -34,6 +34,9 @@ scenarios/multi_agent_confused_deputy/_runs/
 *.log
 *.tmp
 
+# Optional retained Caddy access logs; enabled deployments keep these outside git.
+logs/
+
 push_env_secrets.sh
 
 # Local social-preview generation playbook

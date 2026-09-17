@@ -89,6 +89,8 @@ The included Compose stack can deploy the lab on a small Linux host with Docker,
 
 The script starts the app behind Caddy and waits for `/api/health`. Caddy obtains and renews the HTTPS certificate for `DOMAIN`; DNS must already point to the host. Keep the application port bound to localhost and do not set `TRUST_PROXY_HEADERS=1` unless the host is behind a proxy whose client-IP headers you control.
 
+Retained HTTP access logging is opt-in. Set `ACCESS_LOG_ENABLED=1` in the deployment environment to write rotated JSON access logs to `logs/caddy/`; the default is disabled so a new deployment does not accumulate request history or consume disk unexpectedly. The default rotation keeps at most 90 compressed files of up to 100 MiB each, with a 90-day age limit. Override `ACCESS_LOG_ROLL_SIZE`, `ACCESS_LOG_ROLL_KEEP`, or `ACCESS_LOG_ROLL_KEEP_FOR` when needed. The deployment workflow passes these values from GitHub Actions secrets; leave `ACCESS_LOG_ENABLED` unset or set it to `0` for deployments that do not need retained logs.
+
 This is a public educational demo deployment, not a production banking service. It has no user authentication, uses anonymous per-process limits, and intentionally includes vulnerable modes. Put an additional edge/WAF and shared rate-limit or budget controls in front of multi-instance deployments. The interactive lab requires a server-side Groq key and should not be exposed directly to the public internet without an HTTPS reverse proxy and provider-budget controls.
 
 ## Verification
