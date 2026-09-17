@@ -120,6 +120,13 @@ async def session_middleware(request: Request, call_next):
     return response
 
 
+@app.middleware("http")
+async def csp_nonce_middleware(request: Request, call_next):
+    """Give response-specific inline scripts a nonce for the CSP policy."""
+    request.state.csp_nonce = secrets.token_urlsafe(24)
+    return await call_next(request)
+
+
 def client_ip(request: Request) -> str:
     """Use the edge-provided address only when the origin trusts its proxy."""
     if TRUST_PROXY_HEADERS:
@@ -293,7 +300,19 @@ async def browser_security_middleware(request: Request, call_next):
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
-    response.headers.setdefault("Content-Security-Policy", "default-src 'self'; script-src 'self' https://who-let-the-agents-act.rewanthtammana.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://who-let-the-agents-act.rewanthtammana.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'")
+    csp_nonce = getattr(request.state, "csp_nonce", "")
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "default-src 'self'; "
+        f"script-src 'self' 'nonce-{csp_nonce}' https://who-let-the-agents-act.rewanthtammana.com https://www.googletagmanager.com https://static.cloudflareinsights.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://who-let-the-agents-act.rewanthtammana.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data: https://*.google-analytics.com https://www.googletagmanager.com; "
+        "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://cloudflareinsights.com; "
+        "object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
+    )
+    if response.headers.get("content-type", "").startswith("text/html"):
+        response.headers["Cache-Control"] = "no-store, max-age=0"
     if request.url.path.startswith("/static/"):
         response.headers["Cache-Control"] = "public, max-age=0, must-revalidate"
     return response
@@ -402,6 +421,7 @@ def render_app_assets(template: str, request: Request) -> str:
     base_path = request_base_path(request)
     replacements = {
         "__APP_BASE_PATH_ATTR__": html.escape(base_path, quote=True),
+        "__CSP_NONCE__": html.escape(str(getattr(request.state, "csp_nonce", "")), quote=True),
         "__APP_STYLESHEET_URL__": f"{asset_origin}/static/styles.css?v={APP_STYLESHEET_VERSION}",
         "__APP_SCRIPT_URL__": f"{asset_origin}/static/app.js?v={APP_SCRIPT_VERSION}",
         "__BLOG_STYLESHEET_URL__": f"{asset_origin}/static/blog.css?v={BLOG_ASSET_VERSION}",
