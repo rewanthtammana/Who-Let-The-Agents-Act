@@ -43,6 +43,7 @@ BLOG_ASSET_VERSION = "20260918-all-scenarios3"
 SITE_HEADER_ASSET_VERSION = "20260915-unified1"
 GITHUB_CALLOUT_ASSET_VERSION = "20260915-callout6"
 GITHUB_CALLOUT_SCRIPT_VERSION = "20260915-basepath1"
+THEME_ASSET_VERSION = "20260914-dualhost3"
 SESSION_ROOT = ROOT / ".sessions"
 SESSION_COOKIE = "who_let_the_agents_act_session"
 SESSION_TTL_SECONDS = int(os.getenv("SESSION_TTL_SECONDS", str(30 * 60)))
@@ -429,6 +430,8 @@ def render_app_assets(template: str, request: Request) -> str:
         "__SITE_HEADER_STYLESHEET_URL__": f"{asset_origin}/static/site-header.css?v={SITE_HEADER_ASSET_VERSION}",
         "__GITHUB_CALLOUT_STYLESHEET_URL__": f"{asset_origin}/static/github-callout.css?v={GITHUB_CALLOUT_ASSET_VERSION}",
         "__GITHUB_CALLOUT_SCRIPT_URL__": f"{asset_origin}/static/github-callout.js?v={GITHUB_CALLOUT_SCRIPT_VERSION}",
+        "__THEME_SCRIPT_URL__": f"{asset_origin}/static/theme.js?v={THEME_ASSET_VERSION}",
+        "__FAVICON_URL__": f"{asset_origin}/static/favicon.svg",
     }
     for token, value in replacements.items():
         template = template.replace(token, value)

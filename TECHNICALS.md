@@ -53,7 +53,7 @@ Keep field metadata separate from access rules: use a catalog for classification
 
 ## Runtime behavior
 
-The UI sends only the selected mode and user prompt. Groq dynamically interprets the prompt and creates a structured tool plan where the scenario needs one. The application validates the model response and executes a real parameterized SQLite query. Vulnerable and Prompt-only paths intentionally demonstrate raw-result exposure. Hardened mode applies authorization and projection before data enters model context, then applies LangChain PII middleware to model output and tool-result surfaces.
+The UI sends only the selected mode and user prompt. Groq dynamically interprets the prompt and creates a structured tool plan where the scenario needs one. The application validates the model response and executes a real parameterized SQLite query. Vulnerable and Prompt-only paths intentionally demonstrate raw-result exposure. Hardened modes apply authorization and projection before data enters model context, then apply scenario-specific output and tool-result controls; the Overpowered Data Tool also demonstrates LangChain PII middleware, while other scenarios use deterministic policy and DLP checks tailored to their boundary.
 
 The current Overpowered Data Tool API response includes:
 
