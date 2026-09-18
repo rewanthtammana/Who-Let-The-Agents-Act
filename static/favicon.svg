@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
-  <title>Who Let the Agents Act</title>
-  <rect width="64" height="64" rx="16" fill="#101827"/>
-  <path d="M18 20h28M18 32h20M18 44h28" fill="none" stroke="#78e6c6" stroke-linecap="round" stroke-width="6"/>
-  <circle cx="46" cy="32" r="6" fill="#ffbd66"/>
+  <title>WLAA - Who Let the Agents Act</title>
+  <rect width="64" height="64" fill="#171713"/>
+  <text x="32" y="37" fill="#f1efe7" font-family="monospace" font-size="13" font-weight="500" letter-spacing="0.2" text-anchor="middle">WLAA</text>
 </svg>
