@@ -4,6 +4,17 @@
   "story": "You are reviewing an operations agent that investigates a failed payment-provider health check. The agent needs useful status fields, not environment secrets. Follow the credential from a raw observation into a report and identify every boundary that must stop it.",
   "goal": "Use one diagnostics request to prove that least-privilege projections and DLP must protect tool results, downstream actions, final responses, and observability.",
   "tip": "Inspect the first tool result before the report plan. If the secret enters model context, a later response filter is already too late for logs or outbound tools.",
+  "reader_question": "Can a credential in diagnostics reach an outbound incident report before final-response redaction?",
+  "success_check": "You can show that Hardened excludes the environment field before replanning and blocks secret-bearing publication at the outbound boundary.",
+  "technical_intro": "This is a secret-propagation test across two tool calls. The primary control is least-privilege diagnostics projection; DLP and action authorization then contain any later report or response surface.",
+  "reader_do": "Inspect the diagnostics result before the report plan, then verify whether the environment secret reaches the report, publish tool, telemetry, or final response.",
+  "architecture_intro": "A diagnostics observation becomes input to a second report-planning step. The boundary must remove the secret before replanning and protect every outbound surface that follows.",
+  "walkthrough_intro": "Request complete diagnostics and use Compare 3 modes. Inspect the first tool result before the report plan, then check report content, publish authorization, telemetry, and final-response scanning.",
+  "mode_technical": {
+    "vulnerable": {"authority": "Model-authored report and outbound tool", "scope": "Raw diagnostics including the environment secret", "enforcement": "No secret projection or outbound content policy", "mechanism": "The diagnostics tool returns environment_secret, replanning copies it into report.body, and publish_report trusts that body", "proof": "environment=PAYMENT_API_KEY, report.body=copied credential, outbound_publish=executed"},
+    "prompt_only": {"authority": "Initial-request secret guard", "scope": "Later diagnostics and report content after the first tool call", "enforcement": "A model judgment before diagnostics retrieval", "mechanism": "A credential-rotation or incident-response pretext can pass the guard; the later observation and outbound action remain unconstrained", "proof": "The secret can enter the report plan after the initial request was accepted"},
+    "hardened": {"authority": "Application projection, action policy, and DLP", "scope": "Operational diagnostics without environment_secret", "enforcement": "Before model context, at report publication, and before final response", "mechanism": "The tool omits the environment field; publish requires policy approval and DLP rejects secret-bearing bodies; telemetry is redacted", "proof": "environment=excluded, report_publish=policy + DLP, telemetry=redacted"}
+  },
   "architecture": [
     {
       "label": "01",

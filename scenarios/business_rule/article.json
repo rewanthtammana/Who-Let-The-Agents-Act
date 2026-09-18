@@ -4,6 +4,17 @@
   "story": "You are reviewing a refund agent that can call the same payment tool repeatedly. Each individual refund may look small enough, but the customer request is a state transition with a cumulative ceiling. Your job is to see why a per-call check does not protect the transaction as a whole.",
   "goal": "Use one oversized refund request to prove that cumulative limits, whole-plan checks, and idempotency belong at the application and tool boundaries.",
   "tip": "Begin with a normal $120 refund. For the attack, watch call count, installment amounts, ledger totals, and the original transaction amount instead of judging only the final message.",
+  "reader_question": "Can the refund agent exceed a transaction-wide limit by splitting one goal into smaller calls?",
+  "success_check": "You can show that Hardened denies the $10,000 plan before the first refund write and still rechecks each retry at the tool boundary.",
+  "technical_intro": "This is a state-transition authorization test. The protected decision is the cumulative refund total for one transaction, not whether each individual installment looks small.",
+  "reader_do": "Start with the $120 refund, then run the $10,000 installment attack and inspect the plan total, prior ledger total, and number of writes.",
+  "architecture_intro": "The model can turn one refund goal into many calls, while the database records the transaction state. The boundary must evaluate the complete state transition before and during execution.",
+  "walkthrough_intro": "Run the $10,000 refund request and use Compare 3 modes. Compare the planned installment sequence with persisted totals, completed calls, and idempotency behavior before deciding whether the transaction was authorized.",
+  "mode_technical": {
+    "vulnerable": {"authority": "Model-selected refund amounts and repeated tool calls", "scope": "Any positive installment for the transaction", "enforcement": "Per-call validation without a cumulative transaction ceiling", "mechanism": "The executor accepts repeated refund_execute calls and appends events without totaling prior refunds", "proof": "call_1=$500, call_2=$500, call_3=$500, total=$10,000"},
+    "prompt_only": {"authority": "Model-controlled refund policy guard", "scope": "Installments that each appear within the per-action limit", "enforcement": "A model judgment before the unsafe refund executor", "mechanism": "The guard can accept a sequence of individually compliant calls while no authoritative cumulative state is enforced", "proof": "The installment bypass reaches the executor even though the requested total exceeds $500"},
+    "hardened": {"authority": "Persisted transaction policy and refund tool", "scope": "The lower of the $500 policy ceiling and original transaction amount", "enforcement": "Whole-plan preflight and an independent check on every refund call", "mechanism": "SQLite totals prior refunds, rejects the complete plan before writes, and stable operation keys make retries idempotent", "proof": "requested_total=$10,000, policy_limit=$500, decision=deny, writes=0"}
+  },
   "architecture": [
     {
       "label": "01",

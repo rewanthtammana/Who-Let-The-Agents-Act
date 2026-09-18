@@ -4,6 +4,18 @@
   "story": "You are reviewing a transfer router after it shared more than the receiving specialist needed. The router can see support context, but the specialist should only validate a payment. Follow the handoff across that boundary and separate useful transaction context from secrets and execution authority.",
   "goal": "Use one transfer request to prove why an agent handoff needs authentication, audience binding, minimal typed context, and receiver-side authorization.",
   "tip": "Start with the normal validation request, then compare the attack and bypass prompts. Inspect the handoff payload before reading the final response: the important question is what crossed the boundary.",
+  "technical_intro": "This is a delegated-authority boundary test. The receiver should accept only an authenticated, audience-bound, typed validation envelope and must not inherit execution authority from forwarded prose.",
+  "reader_do": "Inspect the unsigned vulnerable payload, then compare it with the signed envelope's audience, expiry, nonce, and four allowed transaction fields.",
+  "architecture_intro": "A router plans context for a specialist, so the handoff is the trust boundary. The receiver must authenticate the sender and accept only typed validation data within its own scope.",
+  "walkthrough_intro": "Run the over-sharing handoff and use Compare 3 modes. Inspect the unsigned payload, then compare the signed envelope's sender, audience, expiry, nonce, and allowed validation fields.",
+  "reader_question": "Can an unsigned handoff carry secrets or payment authority into the transfer specialist?",
+  "success_check": "You can show that Hardened sends only the signed four-field validation envelope and gives the specialist no execution authority.",
+  "mode_technical": {
+    "vulnerable": {"authority": "Router-selected context and implied execution authority", "scope": "Full support transcript, reset token, and requested payment action", "enforcement": "No sender authentication, audience binding, or receiver scope", "mechanism": "The router forwards an unsigned payload and the specialist trusts the incoming prose", "proof": "support_transcript, password_reset_token, and execution_authority cross the handoff"},
+    "prompt_only": {"authority": "Model-controlled handoff guard", "scope": "The same transfer context if the guard permits the request", "enforcement": "A model judgment before handoff creation", "mechanism": "A trusted-maintenance-channel pretext can pass the guard while the receiver still lacks cryptographic and scope checks", "proof": "The bypass reaches the unsafe handoff path without an authenticated envelope"},
+    "hardened": {"authority": "Authenticated agent registry and receiver-side policy", "scope": "Request ID, amount, currency, and recipient for validation only", "enforcement": "At envelope signing and receiver verification before specialist processing", "mechanism": "Application signs an audience-bound typed payload with expiry and nonce; the receiver verifies it and consumes the nonce", "proof": "audience=transfer-specialist, four transaction fields only, replay nonce verified"
+    }
+  },
   "architecture": [
     {
       "label": "01",

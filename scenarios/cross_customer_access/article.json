@@ -3,7 +3,19 @@
   "story_heading": "When the customer disappears from the decision",
   "story": "You are reviewing a support agent acting for a signed-in customer. The request may legitimately read the caller's transactions, but the model can name another customer ID and the backend service can reach it. Trace the moment where a user-controlled identifier is mistaken for authority.",
   "goal": "Use delegated transaction requests across three synthetic customers to show that object-level authorization must bind the authenticated human, session, and requested customer before any database read.",
+  "reader_question": "Can a model-selected customer ID cross the signed-in user's authorization scope?",
+  "success_check": "You can show that the Hardened path denies the foreign ID before the transaction tool or protected records are accessed.",
+  "time_to_complete": "5 minutes",
+  "mode_technical": {
+    "vulnerable": {"authority": "Broad support service identity", "scope": "Any existing customer ID selected by the model", "enforcement": "No session-to-object binding", "mechanism": "The transaction tool uses the model-selected customer ID as its SQL parameter", "proof": "C101 becomes the query parameter while the session belongs to C100"},
+    "prompt_only": {"authority": "Model-controlled ownership prompt", "scope": "Still broader than the signed-in user's session", "enforcement": "A model judgment before the same broad tool", "mechanism": "The guard can be persuaded by a reconciliation or migration pretext", "proof": "The foreign ID can still reach transaction_read"},
+    "hardened": {"authority": "Authenticated session plus database policy", "scope": "The customer bound to the delegating session", "enforcement": "Before transaction_read and protected data access", "mechanism": "Application compares requested ID with session customer; allowed reads use the authenticated ID in a parameterized query", "proof": "Mismatch is denied and database_reads remains 0"}
+  },
   "tip": "Run the normal request first so you know the legitimate scope. Then compare the requested customer, authenticated customer, SQL parameter, and database-read count for Taylor Morgan and Morgan Patel in the attack and hardened traces.",
+  "technical_intro": "This is an object-level authorization test. The model can propose a customer ID, but the application must bind that object to the authenticated session before transaction_read runs.",
+  "reader_do": "Run a same-customer lookup, then substitute the foreign ID and compare the requested object, authenticated customer, SQL parameter, and database-read count.",
+  "architecture_intro": "A signed-in user delegates a lookup, but the planner supplies the object identifier. The boundary is the application check that binds that identifier to the session before transaction_read.",
+  "walkthrough_intro": "Open the scenario, run the foreign-account request, and use Compare 3 modes. Follow the requested customer ID, authenticated customer, SQL parameter, and database-read count through the trace.",
   "architecture": [
     {
       "label": "01",

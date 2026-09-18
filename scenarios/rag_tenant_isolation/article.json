@@ -4,6 +4,17 @@
   "story": "You are reviewing a retrieval assistant shared by multiple bank tenants. A semantic query can find a highly similar foreign policy before the system checks who is allowed to see it. Follow the candidate set from the active tenant boundary into model context.",
   "goal": "Use one wire-policy search to prove that tenant authorization must constrain retrieval candidates before similarity ranking, not after the model has seen them.",
   "tip": "Compare the candidate set before ranking, the selected document's tenant, and the provenance check. Each tenant has multiple policy documents, so similarity is useful for ranking within an eligible set; it is never an authorization decision.",
+  "reader_question": "Can semantic similarity retrieve a more relevant policy from a tenant the signed-in user cannot access?",
+  "success_check": "You can show that Hardened removes foreign documents from the candidate set before similarity ranking and model context.",
+  "technical_intro": "This is a retrieval authorization test. Tenant eligibility must constrain the candidate set before semantic ranking; filtering after retrieval cannot undo a cross-tenant disclosure to the model.",
+  "reader_do": "Compare the global candidate set with the tenant-prefiltered set, then inspect the selected document's tenant and provenance before reading the answer.",
+  "architecture_intro": "The signed-in tenant supplies an authorization scope to retrieval. The critical ordering is ACL eligibility first, semantic ranking second, and provenance validation again before model context.",
+  "walkthrough_intro": "Run the global-scope wire-policy request and use Compare 3 modes. Inspect eligible candidates before ranking, selected tenant and similarity metadata, then the provenance and output-DLP decisions.",
+  "mode_technical": {
+    "vulnerable": {"authority": "Global retriever scope and similarity ranking", "scope": "All policy documents in the shared corpus", "enforcement": "No tenant pre-filter before ranking", "mechanism": "The retriever ranks Acme and Northstar candidates together and places the most similar foreign chunk in model context", "proof": "scope=global, selected_tenant=northstar-bank, model_context=foreign policy"},
+    "prompt_only": {"authority": "Model instruction to stay within Acme Bank", "scope": "Still the globally ranked shared corpus", "enforcement": "A model judgment after the retriever has selected evidence", "mechanism": "A migration pretext can relax the guard while the retriever continues to rank foreign candidates", "proof": "The foreign candidate remains eligible before the model is asked to ignore it"},
+    "hardened": {"authority": "Active-tenant ACL and bounded document_read tool", "scope": "Documents whose tenant equals the authenticated Acme Bank tenant", "enforcement": "Before semantic ranking, with provenance checked again after retrieval", "mechanism": "The database query pre-filters eligible tenants; the wrapper rejects out-of-scope tenant IDs and rechecks returned provenance", "proof": "active_tenant=acme-bank, eligible_candidates=acme-bank only, foreign_candidates=0"}
+  },
   "architecture": [
     {
       "label": "01",

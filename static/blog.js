@@ -152,6 +152,34 @@ function renderEvidenceBoard(panels) {
   </div>`;
 }
 
+function renderReaderMap(post) {
+  const question = post.reader_question || `Can the agent cross the ${String(post.security_boundary || "security").toLowerCase()} boundary?`;
+  const success = post.success_check || (post.observe?.[0] || "You can point to the enforced boundary in the trace.");
+  return `<section class="reader-map" aria-label="How to use this chapter">
+    <div class="reader-map-heading"><span>YOUR FIRST FIVE MINUTES</span><strong>${escapeHtml(post.time_to_complete || "5 minutes")}</strong></div>
+    <div class="reader-map-grid">
+      <article><span>QUESTION</span><p>${escapeHtml(question)}</p></article>
+      <article><span>DO THIS</span><p>${escapeHtml(post.reader_do || "Run the scenario, compare all three postures, and inspect the enforcement trace.")}</p></article>
+      <article><span>DONE WHEN</span><p>${escapeHtml(success)}</p></article>
+    </div>
+  </section>`;
+}
+
+function renderModeTable(post) {
+  const modes = [
+    ["vulnerable", "VULNERABLE"],
+    ["prompt_only", "PROMPT-ONLY"],
+    ["hardened", "HARDENED"],
+  ];
+  const technical = post.mode_technical || {
+    vulnerable: { authority: "Model-selected plan + scenario tool", scope: "The model's requested data or action", enforcement: "No reliable application boundary", mechanism: post.mode_copy.vulnerable, proof: post.attack_path?.[1] || "Inspect the tool result or side effect." },
+    prompt_only: { authority: "Model-controlled guard", scope: "The model-approved plan", enforcement: "Another model judgment before the tool", mechanism: post.prompt_only_failure, proof: "Run the bypass pretext and inspect whether it reaches the unsafe path." },
+    hardened: { authority: "Application policy", scope: post.security_boundary, enforcement: "Before protected data access or side effects", mechanism: (post.hardened_controls || []).slice(0, 3).map((control) => control.detail).join(" "), proof: (post.observe || ["Inspect the hardened trace and run artifacts."])[0] }
+  };
+  const rows = [["AUTHORITY", "authority"], ["DATA / ACTION SCOPE", "scope"], ["ENFORCEMENT POINT", "enforcement"], ["TECHNICAL MECHANISM", "mechanism"], ["PROOF TO CHECK", "proof"]];
+  return `<div class="mode-table-wrap"><table class="mode-table"><thead><tr><th>COMPARE</th>${modes.map(([, label]) => `<th>${label}</th>`).join("")}</tr></thead><tbody>${rows.map(([label, key]) => `<tr><th scope="row">${label}</th>${modes.map(([mode]) => `<td>${escapeHtml(technical[mode][key])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+
 function renderScreenshots(screenshots, scenarioId) {
   if (!screenshots?.length) return "";
   return `<div class="live-screenshot-grid">
@@ -169,7 +197,7 @@ function renderTocLinks(post, hasPrimer) {
     ${hasPrimer && post.screenshots?.length ? `<a href="#live-captures">Live captures</a>` : ""}
     <a href="#threat-model">Threat model</a>
     <a href="#attack-path">Attack path</a>
-    <a href="#three-modes">Three modes</a>
+    <a href="#three-modes">Compare the modes</a>
     ${hasPrimer && post.walkthrough_steps?.length ? `<a href="#guided-walkthrough">Guided walkthrough</a>` : ""}
     ${hasPrimer && post.annotated_evidence?.length ? `<a href="#annotated-evidence">Annotated evidence</a>` : ""}
     <a href="#controls">Hardened design</a>
@@ -301,6 +329,8 @@ function renderArticle(post, posts) {
           <a class="primary-action" href="${escapeHtml(appLink(post.lab_url))}">Open this scenario in the lab <span>→</span></a>
         </header>
 
+        ${renderReaderMap(post)}
+
         ${articleHeroSrc ? `<figure class="article-hero"><img src="${escapeHtml(articleHeroSrc)}" alt="Security flow illustration for ${escapeHtml(post.title)}" width="1200" height="630" decoding="async"></figure>` : ""}
 
         <section class="quick-summary" aria-labelledby="quick-summary-title">
@@ -310,12 +340,6 @@ function renderArticle(post, posts) {
             <article class="warning"><span>WHY PROMPT-ONLY FAILS</span><p>${escapeHtml(post.prompt_only_failure)}</p></article>
             <article class="safe"><span>ENFORCED BOUNDARY</span><p>${escapeHtml(post.security_boundary)}</p></article>
           </div>
-        </section>
-
-        <section class="boundary-panel">
-          <div><span>VULNERABILITY</span><strong>${escapeHtml(post.vulnerability_type)}</strong></div>
-          <div><span>MODEL DECIDES</span><strong>${escapeHtml(post.agent_decision)}</strong></div>
-          <div><span>SECURITY BOUNDARY</span><strong>${escapeHtml(post.security_boundary)}</strong></div>
         </section>
 
         ${hasPrimer ? `<section id="scenario-brief" class="article-section scenario-primer">
@@ -334,7 +358,7 @@ function renderArticle(post, posts) {
 
         <section id="architecture" class="article-section architecture-section">
           <p class="section-number">02 / SCENARIO ARCHITECTURE</p><h2>Follow the request to the boundary</h2>
-          <p class="architecture-intro">The same natural-language request can travel through every layer. The lesson is to identify which layer is allowed to say "yes" to the final data scope or action.</p>
+          <p class="architecture-intro">${escapeHtml(post.architecture_intro || "Follow the request through the model, tool, policy, and final data or action boundary.")}</p>
           ${renderArchitecture(post.architecture)}
         </section>` : ""}
 
@@ -342,7 +366,7 @@ function renderArticle(post, posts) {
           <div>
             <p class="section-number">${sectionNumber(post, "04")} / TRY THE LAB</p>
             <h2>Start with the attack</h2>
-            <p>Open the scenario, choose the ${escapeHtml(attackPresetLabel)}, and use <strong>Compare 3 modes</strong>. The contrast should be visible immediately: one posture takes the unsafe path, one relies on model judgment, and one enforces policy in application code.</p>
+            <p>${escapeHtml(post.walkthrough_intro || `Open the scenario, choose the ${attackPresetLabel}, and use Compare 3 modes. Inspect the trace and artifacts to see where the application boundary changes the result.`)}</p>
             <a class="text-action" href="${escapeHtml(appLink(post.lab_url))}">Launch Lab ${String(post.number).padStart(2, "0")} →</a>
           </div>
           <div class="prompt-set">
@@ -373,11 +397,8 @@ function renderArticle(post, posts) {
         <section id="three-modes" class="article-section">
           <p class="section-number">${sectionNumber(post, "03")} / THREE DEFENSE POSTURES</p>
           <h2>The same goal, three different boundaries</h2>
-          <div class="mode-comparison">
-            ${modeCard("01 · VULNERABLE", "The model reaches the unsafe path", post.mode_copy.vulnerable, "danger")}
-            ${modeCard("02 · PROMPT-ONLY", "A useful warning, not a boundary", post.prompt_only_failure, "warning")}
-            ${modeCard("03 · HARDENED", "Application code stays authoritative", post.mode_copy.hardened, "safe")}
-          </div>
+          <p class="technical-intro">${escapeHtml(post.technical_intro || "Compare who supplies authority, what scope is permitted, where the request is enforced, and which artifact proves the result.")}</p>
+          ${renderModeTable(post)}
         </section>
 
         ${hasPrimer && post.walkthrough_steps?.length ? `<section id="guided-walkthrough" class="article-section guided-steps">
@@ -392,8 +413,7 @@ function renderArticle(post, posts) {
         </section>` : ""}
 
         <section id="controls" class="article-section">
-          <p class="section-number">${sectionNumber(post, "05")} / HARDENED DESIGN</p>
-          <h2>The controls that make the difference</h2>
+          <p class="section-number">${sectionNumber(post, "05")} / HARDENED DESIGN</p><h2>The controls that make the difference</h2>
           <div class="control-list">${post.hardened_controls.map((control, index) => `<article><span>${String(index + 1).padStart(2, "0")}</span><div><h3>${escapeHtml(control.name)}</h3><p>${escapeHtml(control.detail)}</p></div></article>`).join("")}</div>
           <blockquote>${escapeHtml(post.lesson)}</blockquote>
         </section>

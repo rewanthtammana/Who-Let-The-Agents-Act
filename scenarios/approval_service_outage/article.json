@@ -4,6 +4,17 @@
   "story": "You are reviewing a payment agent during an approval-service outage. The payment request itself may be legitimate, but the dependency that should say yes or no has timed out. Follow the failure through the fallback and distinguish availability from authorization.",
   "goal": "Use approved, denied, and timed-out payment requests to prove that missing authorization is never approval, and that safe systems queue or refuse side effects.",
   "tip": "Switch the approval simulator to timeout before running the comparison. Read the authorization decision, fallback action, ledger write, and pending-review evidence in that order.",
+  "reader_question": "When the approval service times out, can the payment tool distinguish unavailable from approved?",
+  "success_check": "You can show that timeout produces zero payment-ledger writes in Hardened and a pending-review record instead.",
+  "technical_intro": "This is a fail-open dependency test. The model may select a payment request, but only an affirmative approval state should permit the payment tool to write the ledger.",
+  "reader_do": "Set the approval service to timeout, run PAY-2048 in each posture, and compare fallback state with payment-ledger and pending-review writes.",
+  "architecture_intro": "The model selects a payment request, an external service returns approval state, and the payment tool decides whether to write. The failure occurs when timeout is treated as an affirmative decision.",
+  "walkthrough_intro": "Switch the approval simulator to timeout, run PAY-2048, and use Compare 3 modes. Compare the dependency decision, fallback action, ledger writes, and pending-review record rather than trusting the final response.",
+  "mode_technical": {
+    "vulnerable": {"authority": "Model-selected payment request plus tool fallback", "scope": "Any planned supplier payment when approval is unavailable", "enforcement": "Timeout is interpreted as permission inside the payment path", "mechanism": "A missing approval reaches the fail-open fallback, which inserts a payment-ledger row", "proof": "approval_status=timeout, fallback=allow, payment_ledger_writes=1"},
+    "prompt_only": {"authority": "Model-controlled outage guard", "scope": "Still the same payment request and fail-open fallback", "enforcement": "A model judgment before the payment tool", "mechanism": "A business-continuity pretext can persuade the guard, after which timeout still becomes allow", "proof": "The bypass reaches the same fallback path despite no affirmative approval"},
+    "hardened": {"authority": "Application approval state and payment policy", "scope": "Only a payment with an explicit approved decision", "enforcement": "Inside the payment tool before the ledger write", "mechanism": "Null, timeout, and error states fail closed; timeout is queued for review and stable keys protect retries", "proof": "approval_status=timeout, fallback=queue_for_review, payment_ledger_writes=0"}
+  },
   "architecture": [
     {
       "label": "01",

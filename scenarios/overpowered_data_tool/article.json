@@ -3,7 +3,19 @@
   "story_heading": "A support lookup with too much reach",
   "story": "You are reviewing a customer-support agent after a privacy incident. The request sounds routine: identify the card on file. The agent has a legitimate support purpose, but the tool behind it can select every customer column. Your job is to follow the request across the system, find where authority expands, and move that boundary back into application code.",
   "goal": "Use a customer request among similar and unrelated records to expose the difference between model intent and application authority. Finish by proving that the hardened path removes denied fields before SQLite executes the query.",
+  "reader_question": "Can a support agent expose fields that its purpose does not authorize?",
+  "success_check": "You can name the exact point where the Hardened path removes denied fields before the database query.",
+  "time_to_complete": "5 minutes",
+  "mode_technical": {
+    "vulnerable": {"authority": "Model-selected fields + broad tool identity", "scope": "Any real customer column the planner requests", "enforcement": "No application projection", "mechanism": "The tool builds a SQLite SELECT from model-supplied fields and returns the raw result", "proof": "Denied fields appear in the SQL and tool result"},
+    "prompt_only": {"authority": "Model-controlled privacy guard", "scope": "Still the same broad tool if the guard is persuaded", "enforcement": "A second model judgment before the unsafe tool", "mechanism": "Prompt guard classifies the request, but does not change the tool's database authority", "proof": "A plausible migration pretext can reach the same overpowered projection"},
+    "hardened": {"authority": "Database-backed application policy", "scope": "Server-computed allowed field projection", "enforcement": "Before SQL and before model context", "mechanism": "Policy resolves fields; the tool allowlist validates arguments; LangChain PII middleware checks tool-result and response surfaces", "proof": "Denied fields are absent from database_query.json and tool_result.json"}
+  },
   "tip": "Start with Alice Johnson, then try the similar Alice Johnston record and an unrelated customer. Compare all three postures while keeping the trace open: the important result is not only what the agent says, but which record and fields reached the database and model.",
+  "technical_intro": "This is a field-level authorization test. The planner may request columns, but only application policy should compute the projection that reaches SQLite and the model context.",
+  "reader_do": "Run the normal lookup, then request denied card fields and compare the model's requested projection with the SQL that Hardened actually executes.",
+  "architecture_intro": "The request moves from a support purpose to model-selected fields, then into a SQL projection. The security decision is whether policy narrows that projection before SQLite runs it.",
+  "walkthrough_intro": "Open the scenario, run the request for Alice, and use Compare 3 modes. Inspect requested fields, the generated SELECT, and tool_result.json to see whether denied columns ever reach SQLite or model context.",
   "architecture": [
     {
       "label": "01",

@@ -661,6 +661,13 @@ a { color: inherit; }
   aspect-ratio: 1200 / 630;
   object-fit: cover;
 }
+.reader-map { margin: 28px 0 24px; padding: 20px; border: 1px solid #a9cdbd; border-radius: var(--radius-md); background: var(--green-soft); }
+.reader-map-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; color: var(--green); font: 600 .6875rem "DM Mono", monospace; letter-spacing: .08em; }
+.reader-map-heading strong { color: var(--ink); font-size: .75rem; }
+.reader-map-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.reader-map-grid article { min-width: 0; padding: 14px; border: 1px solid rgba(13, 110, 73, .18); border-radius: var(--radius-sm); background: rgba(255, 255, 255, .55); }
+.reader-map-grid article > span { color: var(--green); font: 600 .6875rem "DM Mono", monospace; letter-spacing: .08em; }
+.reader-map-grid p { margin: 7px 0 0; color: var(--ink); font-size: .8125rem; line-height: 1.5; }
 .article.has-article-hero .article-header {
   padding: 30px 0 24px;
 }
@@ -990,6 +997,18 @@ a { color: inherit; }
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
+.technical-intro { max-width: 720px; margin: 0 0 22px; color: var(--muted); font-size: .9375rem; line-height: 1.6; }
+.mode-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--panel); box-shadow: var(--shadow-subtle); }
+.mode-table { width: 100%; min-width: 760px; border-collapse: collapse; table-layout: fixed; }
+.mode-table th, .mode-table td { padding: 16px 18px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; font-size: .8125rem; line-height: 1.5; }
+.mode-table thead th { color: var(--muted); background: var(--panel-subtle); font: 600 .6875rem "DM Mono", monospace; letter-spacing: .08em; }
+.mode-table thead th:not(:first-child) { color: var(--ink); }
+.mode-table thead th:nth-child(2) { border-top: 3px solid var(--red); }
+.mode-table thead th:nth-child(3) { border-top: 3px solid var(--amber); }
+.mode-table thead th:nth-child(4) { border-top: 3px solid var(--green); }
+.mode-table tbody tr:last-child th, .mode-table tbody tr:last-child td { border-bottom: 0; }
+.mode-table tbody th { width: 18%; color: var(--muted); font: 600 .6875rem "DM Mono", monospace; letter-spacing: .06em; }
+.mode-table tbody td { color: var(--ink); }
 .mode-card {
   min-height: 280px;
   padding: 24px;
@@ -1508,6 +1527,7 @@ blockquote {
   .architecture-flow {
     grid-template-columns: repeat(3, 1fr);
   }
+  .reader-map-grid { grid-template-columns: 1fr; }
   .architecture-node:not(:last-child)::after {
     display: none;
   }
