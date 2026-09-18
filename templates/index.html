@@ -115,21 +115,6 @@
         </a>
       </nav>
 
-      <section class="orientation" aria-label="How to use this lab">
-        <article>
-          <span class="orientation-number">01</span>
-          <div><strong>Choose a posture</strong><p>See how the same agent behaves with different defenses.</p></div>
-        </article>
-        <article>
-          <span class="orientation-number">02</span>
-          <div><strong>Send a request</strong><p>Use a preset or write your own natural-language message.</p></div>
-        </article>
-        <article>
-          <span class="orientation-number">03</span>
-          <div><strong>Read the evidence</strong><p>Follow the trace to see what the model and application did.</p></div>
-        </article>
-      </section>
-
       <section id="scenario-library" class="scenario-library" aria-labelledby="scenario-library-title">
         <div class="section-title scenario-library-title">
           <div>
@@ -189,6 +174,7 @@
             <div class="run-actions"><button id="compare" class="secondary" type="button">COMPARE MODES</button><button id="run" class="run"><span>RUN AGENT</span><span>→</span></button></div>
           </div>
           <p class="note" id="flow-note"></p>
+          <a id="trace-jump-console" class="trace-jump trace-jump-console hidden" href="#trace-section">VIEW EXECUTION TRACE ↓</a>
         </section>
 
         <section class="card outcome scenario-detail" aria-live="polite">
@@ -207,6 +193,7 @@
             <div class="verdict"><i id="verdict-dot"></i><div><small>OUTCOME</small><strong id="verdict"></strong></div></div>
             <pre id="response"></pre>
             <p id="result-summary"></p>
+            <a id="trace-jump" class="trace-jump hidden" href="#trace-section">VIEW EXECUTION TRACE ↓</a>
           </div>
           <div id="comparison" class="comparison hidden"></div>
         </section>

@@ -388,6 +388,8 @@ function clearResult() {
   $("#comparison").classList.add("hidden");
   $("#comparison").innerHTML = "";
   $("#trace-section").classList.add("hidden");
+  $("#trace-jump").classList.add("hidden");
+  $("#trace-jump-console").classList.add("hidden");
   $("#badge").textContent = "WAITING";
 }
 
@@ -534,6 +536,8 @@ function renderResult(result) {
   $("#empty").classList.add("hidden");
   $("#result").classList.remove("hidden");
   $("#trace-section").classList.remove("hidden");
+  $("#trace-jump").classList.remove("hidden");
+  $("#trace-jump-console").classList.remove("hidden");
   $("#badge").textContent = result.badge;
   $("#verdict").textContent = result.verdict;
   $("#response").textContent = result.response;
@@ -569,6 +573,8 @@ function renderError(message) {
   $("#verdict").textContent = "error";
   $("#response").textContent = message;
   $("#result-summary").textContent = "No scripted fallback was used. Fix the model or database error and run again.";
+  $("#trace-jump").classList.add("hidden");
+  $("#trace-jump-console").classList.add("hidden");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
