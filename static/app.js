@@ -26,6 +26,26 @@ const APP_PATH_PREFIX = "/who-let-the-agents-act";
 const configuredBasePath = document.querySelector('meta[name="wlaa-base-path"]')?.content || "";
 const APP_BASE_PATH = configuredBasePath || (window.location.pathname === APP_PATH_PREFIX || window.location.pathname.startsWith(`${APP_PATH_PREFIX}/`) ? APP_PATH_PREFIX : "");
 const appUrl = (path) => `${APP_BASE_PATH}${path}`;
+const analyticsModes = new Set(["vulnerable", "prompt_only", "hardened"]);
+const analyticsVerdicts = new Set(["exposed", "refused", "contained", "allowed"]);
+function trackAnalyticsEvent(name, params) {
+  if (typeof window.gtag !== "function") return;
+  window.gtag("event", name, params);
+}
+function trackScenarioOpened(scenarioId) {
+  if (!/^[a-z0-9-]+$/.test(scenarioId || "")) return;
+  trackAnalyticsEvent("scenario_open", { scenario_id: scenarioId });
+}
+function trackModeSelected(scenarioId, mode) {
+  if (!/^[a-z0-9-]+$/.test(scenarioId || "") || !analyticsModes.has(mode)) return;
+  trackAnalyticsEvent("mode_selected", { scenario_id: scenarioId, mode });
+}
+function trackScenarioRun(name, scenarioId, mode, runType, verdict) {
+  if (!/^[a-z0-9-]+$/.test(scenarioId || "") || !analyticsModes.has(mode)) return;
+  const params = { scenario_id: scenarioId, mode, run_type: runType === "compare" ? "compare" : "single" };
+  if (analyticsVerdicts.has(verdict)) params.verdict = verdict;
+  trackAnalyticsEvent(name, params);
+}
 document.querySelectorAll("[data-app-path]").forEach((link) => {
   link.href = appUrl(link.dataset.appPath);
 });
@@ -220,6 +240,7 @@ async function init() {
   setPreset("normal");
   setScenarioView(Boolean(selectedScenario));
   syncCustomScenarioSelect();
+  if (selectedScenario) trackScenarioOpened(state.scenario.id);
   if (selectedScenario && window.location.pathname !== appUrl(`/lab/${encodeURIComponent(selectedScenario)}`)) history.replaceState(null, "", appUrl(`/lab/${encodeURIComponent(selectedScenario)}`));
 }
 
@@ -238,6 +259,7 @@ async function switchScenario() {
   renderPolicy(state.scenario.field_policy);
   setMode("vulnerable"); setPreset("normal");
   setScenarioView(true, true);
+  trackScenarioOpened(state.scenario.id);
 }
 
 function showScenarioIndex() {
@@ -399,7 +421,8 @@ function showPending(message, detail) {
   $("#empty").innerHTML = `<span class="empty-mark" aria-hidden="true">•••</span><strong>${escapeHtml(message)}</strong><p>${escapeHtml(detail)}</p>`;
 }
 
-async function requestRun(mode, prompt) {
+async function requestRun(mode, prompt, runType = "single") {
+  trackScenarioRun("scenario_run", state.scenario.id, mode, runType);
   showPending("The agent is working", "Planning, tool execution, and security checks will appear here when the run completes.");
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), RUN_TIMEOUT_MS);
@@ -423,6 +446,7 @@ async function requestRun(mode, prompt) {
     if (response.status === 503) throw new Error(payload.detail || "The demo is temporarily unavailable. Please try again later.");
     throw new Error(payload.detail || "The agent run failed.");
   }
+  trackScenarioRun("scenario_completed", payload.scenario_id || state.scenario.id, payload.mode || mode, runType, payload.verdict);
   try {
     const capacityResponse = await fetch(appUrl("/api/capacity"), { cache: "no-store" });
     if (capacityResponse.ok) state.capacity = await capacityResponse.json();
@@ -491,7 +515,7 @@ async function compareModes() {
           <span class="verdict-tag">RUNNING</span>
         </div>
         <p>Planning, executing, and checking this posture…</p>`;
-      const result = await requestRun(mode, prompt);
+      const result = await requestRun(mode, prompt, "compare");
       if (generation !== interactionGeneration) return;
       results.push(result);
       card.className = `comparison-card ${escapeHtml(mode)} ${escapeHtml(result.verdict)}`;
@@ -579,7 +603,12 @@ function renderError(message) {
 
 document.addEventListener("DOMContentLoaded", () => {
   init().catch((error) => renderError(error.message));
-  document.querySelectorAll(".mode").forEach((button) => button.addEventListener("click", () => setMode(button.dataset.mode)));
+  document.querySelectorAll(".mode").forEach((button) => button.addEventListener("click", () => {
+    const mode = button.dataset.mode;
+    const changed = mode !== state.mode;
+    setMode(mode);
+    if (changed && state.scenario) trackModeSelected(state.scenario.id, mode);
+  }));
   document.querySelectorAll(".preset").forEach((button) => button.addEventListener("click", () => setPreset(button.dataset.preset)));
   $("#prompt").addEventListener("input", markCustom);
   $("#run").addEventListener("click", runAgent);
