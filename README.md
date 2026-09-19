@@ -118,6 +118,10 @@ python3 scripts/verify_matrix.py
 - [Contributing](CONTRIBUTING.md)
 - [Security and responsible disclosure](SECURITY.md)
 
+## References
+
+- [Subhash Dasyam's writing on securing agentic AI architectures 10 part series](https://www.subhashdasyam.com/2025/12/securing-agentic-ai-architecture.html?utm_source=who-let-the-agents-act&utm_medium=referral&utm_campaign=project_references&utm_content=readme)
+
 ## Contributing
 
 Contributions are welcome, especially new scenarios, stronger application-enforced boundaries, clearer field guides, accessibility improvements, and focused security tests. Use synthetic data only and keep vulnerable behavior intentional, isolated, and clearly labeled. See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
