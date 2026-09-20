@@ -38,7 +38,7 @@
 
 Run the same natural-language request against three postures - **Vulnerable**, **Prompt-only**, and **Hardened** - then compare what the agent plans, what the application allows, and what reaches the final response. Every scenario uses synthetic data and produces inspectable evidence.
 
-> **Educational use only.** Vulnerable modes intentionally expose synthetic records and execute simulated side effects. Do not connect this project to production data, credentials, accounts, or payment systems.
+> **Security warning:** This project intentionally contains vulnerable implementations for educational and research purposes. All included data is synthetic. Do not connect vulnerable modes to production data, credentials, accounts, payment systems, or other sensitive environments.
 
 ## What you will learn
 
@@ -121,6 +121,10 @@ python3 scripts/verify_matrix.py
 ## References
 
 - [Subhash Dasyam's writing on securing agentic AI architectures 10 part series](https://www.subhashdasyam.com/2025/12/securing-agentic-ai-architecture.html?utm_source=who-let-the-agents-act&utm_medium=referral&utm_campaign=project_references&utm_content=readme)
+
+## License
+
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
 
 ## Contributing
 
