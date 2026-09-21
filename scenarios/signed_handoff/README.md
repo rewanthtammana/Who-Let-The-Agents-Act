@@ -1,6 +1,6 @@
 # Unsafe Agent Handoff scenario
 
-[Read the Unsafe Agent Handoff field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/signed-handoff)
+[Read the Unsafe Agent Handoff field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/unsafe-agent-handoff)
 
 Each posture is deliberately isolated so the differences are easy to inspect:
 

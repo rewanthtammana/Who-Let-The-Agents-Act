@@ -31,15 +31,15 @@ from scenarios.signed_handoff.database import TransferNotFound
 from scenarios.rag_tenant_isolation.database import DocumentNotFound
 from scenarios.approval_service_outage.database import PaymentRequestNotFound
 from scenarios.multi_agent_confused_deputy.database import AccountNotFound, FraudCaseNotFound
-from scenarios.registry import DATABASE, INJECTION_ROOT, SCENARIOS
+from scenarios.registry import DATABASE, INJECTION_ROOT, SCENARIOS, scenario_id_for_name, scenario_slug
 
 ROOT = Path(__file__).resolve().parent
 PUBLIC_SITE_ROOT = "https://rewanthtammana.com/who-let-the-agents-act"
 PUBLIC_ASSET_ORIGIN = "https://who-let-the-agents-act.rewanthtammana.com"
 PUBLIC_APP_BASE_PATH = os.getenv("PUBLIC_APP_BASE_PATH", "/who-let-the-agents-act")
 APP_STYLESHEET_VERSION = "20260921-funnel4"
-APP_SCRIPT_VERSION = "20260921-basepath2"
-BLOG_ASSET_VERSION = "20260921-basepath2"
+APP_SCRIPT_VERSION = "20260921-canonical-slugs1"
+BLOG_ASSET_VERSION = "20260921-canonical-slugs1"
 SITE_HEADER_ASSET_VERSION = "20260915-unified1"
 GITHUB_CALLOUT_ASSET_VERSION = "20260915-callout6"
 GITHUB_CALLOUT_SCRIPT_VERSION = "20260921-funnel3"
@@ -322,6 +322,7 @@ app.add_middleware(
     SlidingWindowRateLimitMiddleware,
     limits={
         "/api/scenarios/indirect-injection/invoices/upload": int(os.getenv("UPLOAD_RATE_LIMIT_PER_MINUTE", "10")),
+        "/api/scenarios/poisoned-invoice-instructions/invoices/upload": int(os.getenv("UPLOAD_RATE_LIMIT_PER_MINUTE", "10")),
     },
 )
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
@@ -509,8 +510,34 @@ def rewrite_app_path_hrefs(template: str, base_path: str) -> str:
     return re.sub(r"<a\b[^>]*\bdata-app-path=\"[^\"]+\"[^>]*>", replace_tag, template)
 
 
-def redirect_app_path(request: Request, path: str) -> RedirectResponse:
-    return RedirectResponse(app_path(request, path), status_code=308)
+def redirect_app_path(request: Request, path: str, *, preserve_query: bool = True) -> RedirectResponse:
+    location = app_path(request, path)
+    query = request.scope.get("query_string", b"").decode("latin-1")
+    if preserve_query and query:
+        location = f"{location}?{query}"
+    return RedirectResponse(location, status_code=308)
+
+
+def require_scenario_id(name: str, detail: str = "Scenario not found") -> str:
+    scenario_id = scenario_id_for_name(name)
+    if scenario_id is None:
+        raise HTTPException(status_code=404, detail=detail)
+    return scenario_id
+
+
+def redirect_scenario_alias(
+    request: Request,
+    route_prefix: str,
+    scenario_id: str,
+    suffix: str = "",
+    *,
+    preserve_query: bool = True,
+) -> RedirectResponse:
+    return redirect_app_path(
+        request,
+        f"{route_prefix}/{scenario_slug(scenario_id)}{suffix}",
+        preserve_query=preserve_query,
+    )
 
 
 def render_initial_page(template: str, request: Request, scenario_config: dict[str, object] | None = None) -> str:
@@ -523,7 +550,7 @@ def render_initial_page(template: str, request: Request, scenario_config: dict[s
         severity = str(config.get("severity") or "High")
         active = config.get("id") == selected_id
         initial_grid.append(
-            f'''<button class="scenario-tile{" active" if active else ""}" type="button" role="listitem" data-scenario-id="{html.escape(str(config["id"]), quote=True)}" aria-pressed="{"true" if active else "false"}">
+            f'''<button class="scenario-tile{" active" if active else ""}" type="button" role="listitem" data-scenario-id="{html.escape(str(config["slug"]), quote=True)}" aria-pressed="{"true" if active else "false"}">
       <span class="scenario-tile-top"><small>{int(config["number"]):02d} · {html.escape(category)}</small><span class="scenario-tile-severity severity {html.escape(severity.lower())}">{html.escape(severity.upper())}</span></span>
       <strong>{html.escape(str(config["title"]))}</strong>
       <span class="scenario-tile-type">{html.escape(str(config.get("vulnerability_type") or "Agent security scenario"))}</span>
@@ -563,7 +590,7 @@ def render_initial_page(template: str, request: Request, scenario_config: dict[s
 def scenario_social_image(scenario_id: str, config: dict[str, object], fallback: str) -> str:
     preview = config.get("social_preview")
     if isinstance(preview, str) and re.fullmatch(r"[a-z0-9_-]+\.png", preview):
-        return f"{PUBLIC_ASSET_ORIGIN}/api/scenario-assets/{scenario_id}/{preview}"
+        return f"{PUBLIC_ASSET_ORIGIN}/api/scenario-assets/{scenario_slug(scenario_id)}/{preview}"
     return f"{PUBLIC_ASSET_ORIGIN}/static/{fallback}"
 
 
@@ -578,10 +605,12 @@ def labs_index(request: Request) -> RedirectResponse:
     return redirect_app_path(request, "/")
 
 
-@app.get("/lab/{scenario_id}")
-def scenario_lab(scenario_id: str, request: Request) -> HTMLResponse:
-    if scenario_id not in SCENARIOS:
-        raise HTTPException(status_code=404, detail="Scenario not found")
+@app.get("/lab/{scenario_name}")
+def scenario_lab(scenario_name: str, request: Request) -> HTMLResponse:
+    scenario_id = require_scenario_id(scenario_name)
+    slug = scenario_slug(scenario_id)
+    if scenario_name != slug:
+        return redirect_scenario_alias(request, "/lab", scenario_id)
     config = SCENARIOS[scenario_id][0]
     title = str(config["title"])
     vulnerability = str(config["vulnerability_type"])
@@ -589,7 +618,7 @@ def scenario_lab(scenario_id: str, request: Request) -> HTMLResponse:
         "index.html",
         title=f"{title} - Interactive Agent Security Lab",
         description=str(config["summary"]),
-        canonical_url=f"{PUBLIC_SITE_ROOT}/lab/{scenario_id}",
+        canonical_url=f"{PUBLIC_SITE_ROOT}/lab/{slug}",
         image_url=scenario_social_image(scenario_id, config, "social-preview.png"),
         image_alt=f"{title} - {vulnerability}",
         asset_request=request,
@@ -597,11 +626,10 @@ def scenario_lab(scenario_id: str, request: Request) -> HTMLResponse:
     )
 
 
-@app.get("/labs/{scenario_id}")
-def legacy_scenario_lab(scenario_id: str, request: Request) -> RedirectResponse:
-    if scenario_id not in SCENARIOS:
-        raise HTTPException(status_code=404, detail="Scenario not found")
-    return redirect_app_path(request, f"/lab/{scenario_id}")
+@app.get("/labs/{scenario_name}")
+def legacy_scenario_lab(scenario_name: str, request: Request) -> RedirectResponse:
+    scenario_id = require_scenario_id(scenario_name)
+    return redirect_scenario_alias(request, "/lab", scenario_id)
 
 
 def blog_post_payload(scenario_id: str, request: Request) -> dict[str, object]:
@@ -612,11 +640,12 @@ def blog_post_payload(scenario_id: str, request: Request) -> dict[str, object]:
     if not article_path.is_file():
         raise HTTPException(status_code=404, detail="Scenario article not found")
     article = json.loads(article_path.read_text(encoding="utf-8"))
+    slug = scenario_slug(scenario_id)
     return {
         **config,
         **article,
-        "url": app_path(request, f"/blog/{scenario_id}"),
-        "lab_url": app_path(request, f"/lab/{scenario_id}"),
+        "url": app_path(request, f"/blog/{slug}"),
+        "lab_url": app_path(request, f"/lab/{slug}"),
     }
 
 
@@ -626,8 +655,12 @@ def blog(request: Request) -> HTMLResponse:
     return HTMLResponse(render_app_assets(template, request))
 
 
-@app.get("/blog/{scenario_id}")
-def blog_article(scenario_id: str, request: Request) -> HTMLResponse:
+@app.get("/blog/{scenario_name}")
+def blog_article(scenario_name: str, request: Request) -> HTMLResponse:
+    scenario_id = require_scenario_id(scenario_name, "Scenario article not found")
+    slug = scenario_slug(scenario_id)
+    if scenario_name != slug:
+        return redirect_scenario_alias(request, "/blog", scenario_id)
     post = blog_post_payload(scenario_id, request)
     title = str(post["title"])
     vulnerability = str(post["vulnerability_type"])
@@ -635,7 +668,7 @@ def blog_article(scenario_id: str, request: Request) -> HTMLResponse:
         "blog.html",
         title=f"{title} - Agent Security Field Guide",
         description=str(post["summary"]),
-        canonical_url=f"{PUBLIC_SITE_ROOT}/blog/{scenario_id}",
+        canonical_url=f"{PUBLIC_SITE_ROOT}/blog/{slug}",
         image_url=scenario_social_image(scenario_id, post, "social-preview-blog.png"),
         image_alt=f"{title} - {vulnerability}",
         asset_request=request,
@@ -648,8 +681,11 @@ def blog_catalog(request: Request) -> list[dict[str, object]]:
     return sorted(posts, key=lambda post: int(post["number"]))
 
 
-@app.get("/api/blog/{scenario_id}")
-def blog_article_data(scenario_id: str, request: Request) -> dict[str, object]:
+@app.get("/api/blog/{scenario_name}")
+def blog_article_data(scenario_name: str, request: Request):
+    scenario_id = require_scenario_id(scenario_name, "Scenario article not found")
+    if scenario_name != scenario_slug(scenario_id):
+        return redirect_scenario_alias(request, "/api/blog", scenario_id)
     return blog_post_payload(scenario_id, request)
 
 
@@ -711,9 +747,8 @@ def github_stats() -> JSONResponse:
 def scenarios() -> list[dict[str, object]]:
     return [config for config, _, _, _ in SCENARIOS.values()]
 
-@app.get("/api/scenario")
-def scenario(request: Request, scenario_id: str = "overpowered-data-tool") -> dict[str, object]:
-    if scenario_id not in SCENARIOS: raise HTTPException(status_code=404, detail="Scenario not found")
+
+def scenario_payload(request: Request, scenario_id: str) -> dict[str, object]:
     config, _, shared_agent, _ = SCENARIOS[scenario_id]
     database = session_database(scenario_id, _session_id(request))
     agent = type(shared_agent)(database, GROQ)
@@ -734,10 +769,25 @@ def scenario(request: Request, scenario_id: str = "overpowered-data-tool") -> di
     return payload
 
 
-@app.post("/api/scenarios/{scenario_id}/reset")
-def reset_scenario(request: Request, scenario_id: str) -> dict[str, object]:
-    if scenario_id not in SCENARIOS:
-        raise HTTPException(status_code=404, detail="Scenario not found")
+@app.get("/api/scenarios/{scenario_name}")
+def scenario_by_name(request: Request, scenario_name: str):
+    scenario_id = require_scenario_id(scenario_name)
+    if scenario_name != scenario_slug(scenario_id):
+        return redirect_scenario_alias(request, "/api/scenarios", scenario_id)
+    return scenario_payload(request, scenario_id)
+
+
+@app.get("/api/scenario")
+def legacy_scenario(request: Request, scenario_id: str = "overpowered-data-tool") -> RedirectResponse:
+    resolved_id = require_scenario_id(scenario_id)
+    return redirect_scenario_alias(request, "/api/scenarios", resolved_id, preserve_query=False)
+
+
+@app.post("/api/scenarios/{scenario_name}/reset")
+def reset_scenario(request: Request, scenario_name: str):
+    scenario_id = require_scenario_id(scenario_name)
+    if scenario_name != scenario_slug(scenario_id):
+        return redirect_scenario_alias(request, "/api/scenarios", scenario_id, "/reset")
     database = session_database(scenario_id, _session_id(request))
     reset = getattr(database, "reset_runtime", None)
     if reset is None:
@@ -757,19 +807,29 @@ def reset_session(request: Request) -> dict[str, object]:
     return {"status": "reset", "scope": "current_session"}
 
 
-@app.post("/api/scenarios/indirect-injection/invoices/fixture/{variant}")
-def load_invoice_fixture(request: Request, variant: str) -> dict[str, object]:
+@app.post("/api/scenarios/{scenario_name}/invoices/fixture/{variant}")
+def load_invoice_fixture(request: Request, scenario_name: str, variant: str):
+    scenario_id = require_scenario_id(scenario_name)
+    if scenario_id != "indirect-injection":
+        raise HTTPException(status_code=404, detail="Invoice scenario not found")
+    if scenario_name != scenario_slug(scenario_id):
+        return redirect_scenario_alias(request, "/api/scenarios", scenario_id, f"/invoices/fixture/{variant}")
     try:
-        return session_database("indirect-injection", _session_id(request)).load_fixture(variant)
+        return session_database(scenario_id, _session_id(request)).load_fixture(variant)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
-@app.post("/api/scenarios/approval-service-outage/dependency/{state}")
-def set_approval_dependency_state(request: Request, state: str) -> dict[str, object]:
+@app.post("/api/scenarios/{scenario_name}/dependency/{state}")
+def set_approval_dependency_state(request: Request, scenario_name: str, state: str):
+    scenario_id = require_scenario_id(scenario_name)
+    if scenario_id != "approval-service-outage":
+        raise HTTPException(status_code=404, detail="Approval scenario not found")
+    if scenario_name != scenario_slug(scenario_id):
+        return redirect_scenario_alias(request, "/api/scenarios", scenario_id, f"/dependency/{state}")
     try:
-        dependency = session_database("approval-service-outage", _session_id(request)).set_dependency_state(state)
-        return {"scenario_id": "approval-service-outage", "dependency": dependency}
+        dependency = session_database(scenario_id, _session_id(request)).set_dependency_state(state)
+        return {"scenario_id": scenario_id, "dependency": dependency}
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -777,8 +837,10 @@ def set_approval_dependency_state(request: Request, state: str) -> dict[str, obj
 @app.post("/api/run")
 def run_scenario(request: Request, payload: RunRequest) -> dict[str, object]:
     try:
-        if payload.scenario_id not in SCENARIOS: raise ValueError("Unsupported scenario")
-        agent, _ = session_agent(payload.scenario_id, _session_id(request))
+        scenario_id = scenario_id_for_name(payload.scenario_id)
+        if scenario_id is None:
+            raise ValueError("Unsupported scenario")
+        agent, _ = session_agent(scenario_id, _session_id(request))
         with model_call_budget(MODEL_MAX_ATTEMPTS_PER_RUN) as budget:
             result = agent.run(payload.mode, payload.prompt.strip())
         return result
@@ -808,13 +870,18 @@ def run_scenario(request: Request, payload: RunRequest) -> dict[str, object]:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
-@app.post("/api/scenarios/indirect-injection/invoices/upload")
-async def upload_invoice(request: Request, invoice_id: str = Query(..., min_length=1, max_length=64), filename: str = Query("uploaded-invoice.txt", max_length=200)) -> dict[str, object]:
+@app.post("/api/scenarios/{scenario_name}/invoices/upload")
+async def upload_invoice(request: Request, scenario_name: str, invoice_id: str = Query(..., min_length=1, max_length=64), filename: str = Query("uploaded-invoice.txt", max_length=200)):
+    scenario_id = require_scenario_id(scenario_name)
+    if scenario_id != "indirect-injection":
+        raise HTTPException(status_code=404, detail="Invoice scenario not found")
+    if scenario_name != scenario_slug(scenario_id):
+        return redirect_scenario_alias(request, "/api/scenarios", scenario_id, "/invoices/upload")
     body = await request.body()
     if len(body) > 5_000_000:
         raise HTTPException(status_code=413, detail="The uploaded file is larger than 5 MB")
     try:
-        database = session_database("indirect-injection", _session_id(request))
+        database = session_database(scenario_id, _session_id(request))
         return database.replace_document(invoice_id, extract_invoice_text(filename, body), Path(filename).name, "uploaded")
     except InvoiceNotFound as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -822,8 +889,13 @@ async def upload_invoice(request: Request, invoice_id: str = Query(..., min_leng
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
-@app.get("/api/scenarios/indirect-injection/invoices/{variant}/download")
-def download_invoice_fixture(variant: str) -> PlainTextResponse:
+@app.get("/api/scenarios/{scenario_name}/invoices/{variant}/download")
+def download_invoice_fixture(request: Request, scenario_name: str, variant: str):
+    scenario_id = require_scenario_id(scenario_name)
+    if scenario_id != "indirect-injection":
+        raise HTTPException(status_code=404, detail="Invoice scenario not found")
+    if scenario_name != scenario_slug(scenario_id):
+        return redirect_scenario_alias(request, "/api/scenarios", scenario_id, f"/invoices/{variant}/download")
     fixtures = {
         "default": ("default_invoice.txt", "invoice-INV-884.txt"),
         "malicious": ("malicious_invoice.txt", "malicious-invoice-INV-884.txt"),
@@ -850,13 +922,16 @@ def run_artifact(run_id: str, artifact_name: str) -> FileResponse:
     raise HTTPException(status_code=404, detail="Artifact not found")
 
 
-@app.get("/api/scenario-assets/{scenario_id}/{asset_name}")
-def scenario_asset(scenario_id: str, asset_name: str) -> FileResponse:
+@app.get("/api/scenario-assets/{scenario_name}/{asset_name}")
+def scenario_asset(request: Request, scenario_name: str, asset_name: str):
     if not re.fullmatch(r"[a-z0-9_-]+\.(?:svg|png|webp)", asset_name):
         raise HTTPException(status_code=404, detail="Scenario asset not found")
-    scenario = SCENARIOS.get(scenario_id)
-    if not scenario:
+    scenario_id = scenario_id_for_name(scenario_name)
+    if scenario_id is None:
         raise HTTPException(status_code=404, detail="Scenario asset not found")
+    if scenario_name != scenario_slug(scenario_id):
+        return redirect_scenario_alias(request, "/api/scenario-assets", scenario_id, f"/{asset_name}")
+    scenario = SCENARIOS[scenario_id]
     screenshots_dir = (scenario[3] / "screenshots").resolve()
     candidate = (screenshots_dir / asset_name).resolve()
     if not candidate.is_relative_to(screenshots_dir) or not candidate.is_file():

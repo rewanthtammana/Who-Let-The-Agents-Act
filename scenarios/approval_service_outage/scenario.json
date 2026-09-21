@@ -1,5 +1,7 @@
 {
   "id": "approval-service-outage",
+  "slug": "approval-service-outage",
+  "aliases": [],
   "number": 8,
   "title": "Approval Service Outage",
   "domain": "Operational security",

@@ -1,6 +1,6 @@
 # Cross-Account Access scenario
 
-[Read the Cross-Account Access field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/cross-customer-access)
+[Read the Cross-Account Access field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/cross-account-access)
 
 Each posture is deliberately isolated so the differences are easy to inspect:
 

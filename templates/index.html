@@ -157,9 +157,9 @@
             <label for="invoice-file">Attach a vendor invoice document</label>
             <div class="upload-row"><input id="invoice-file" type="file" accept=".txt,.md,.csv,.json,.docx,.pdf,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" /><button id="upload-invoice" type="button">UPLOAD TO INV-884</button></div>
             <div class="fixture-row" aria-label="Invoice fixture"><button type="button" data-invoice-fixture="clean">LOAD CLEAN</button><button type="button" data-invoice-fixture="attack">LOAD ATTACK</button><button type="button" data-invoice-fixture="bypass">LOAD BYPASS</button></div>
-            <a id="download-clean" class="download-default" data-app-path="/api/scenarios/indirect-injection/invoices/default/download">↓ DOWNLOAD CLEAN DEFAULT INVOICE</a>
-            <a id="download-attack" class="download-default hidden" data-app-path="/api/scenarios/indirect-injection/invoices/malicious/download">↓ DOWNLOAD VULNERABLE-MODE ATTACK INVOICE</a>
-            <a id="download-bypass" class="download-default hidden" data-app-path="/api/scenarios/indirect-injection/invoices/malicious-approved-test/download">↓ DOWNLOAD PROMPT-ONLY BYPASS INVOICE</a>
+            <a id="download-clean" class="download-default" data-app-path="/api/scenarios/poisoned-invoice-instructions/invoices/default/download">↓ DOWNLOAD CLEAN DEFAULT INVOICE</a>
+            <a id="download-attack" class="download-default hidden" data-app-path="/api/scenarios/poisoned-invoice-instructions/invoices/malicious/download">↓ DOWNLOAD VULNERABLE-MODE ATTACK INVOICE</a>
+            <a id="download-bypass" class="download-default hidden" data-app-path="/api/scenarios/poisoned-invoice-instructions/invoices/malicious-approved-test/download">↓ DOWNLOAD PROMPT-ONLY BYPASS INVOICE</a>
             <p id="upload-status" class="upload-status">Uploads replace vendor text only. Trusted payment fields stay in the bank database.</p>
             <p id="active-document" class="upload-status"></p>
           </div>

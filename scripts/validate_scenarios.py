@@ -44,6 +44,7 @@ def validate(root: Path) -> list[str]:
     scenarios_root = root / "scenarios"
     errors: list[str] = []
     seen_ids: set[str] = set()
+    scenario_names: dict[str, str] = {}
     scenario_dirs = sorted(path.parent for path in scenarios_root.glob("*/scenario.json"))
 
     if not scenario_dirs:
@@ -72,9 +73,28 @@ def validate(root: Path) -> list[str]:
         else:
             seen_ids.add(scenario_id)
 
-        for key in ("id", "title", "number", "prompts"):
+        for key in ("id", "slug", "aliases", "title", "number", "prompts"):
             if key not in config:
                 errors.append(f"{label}: scenario.json missing {key}")
+        slug = config.get("slug")
+        if not isinstance(slug, str) or not SCENARIO_ID.fullmatch(slug):
+            errors.append(f"{label}: slug must be lowercase kebab-case")
+        elif isinstance(config.get("title"), str):
+            expected_slug = re.sub(r"[^a-z0-9]+", "-", config["title"].lower()).strip("-")
+            if slug != expected_slug:
+                errors.append(f"{label}: slug must match the title ({expected_slug})")
+        aliases = config.get("aliases")
+        if not isinstance(aliases, list) or not all(isinstance(alias, str) and SCENARIO_ID.fullmatch(alias) for alias in aliases):
+            errors.append(f"{label}: aliases must be an array of lowercase kebab-case names")
+            aliases = []
+        for name in (scenario_id, slug, *aliases):
+            if not isinstance(name, str) or not SCENARIO_ID.fullmatch(name):
+                continue
+            owner = scenario_names.get(name)
+            if owner is not None and owner != scenario_id:
+                errors.append(f"{label}: scenario name {name} is already assigned to {owner}")
+            else:
+                scenario_names[name] = scenario_id
         if isinstance(config.get("prompts"), dict) and not config["prompts"]:
             errors.append(f"{label}: scenario.json prompts must not be empty")
 

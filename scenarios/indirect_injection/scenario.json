@@ -1,5 +1,7 @@
 {
   "id": "indirect-injection",
+  "slug": "poisoned-invoice-instructions",
+  "aliases": ["indirect-injection"],
   "number": 5,
   "title": "Poisoned Invoice Instructions",
   "domain": "RAG & memory",

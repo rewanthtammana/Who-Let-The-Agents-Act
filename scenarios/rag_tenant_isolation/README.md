@@ -1,6 +1,6 @@
 # Multi-tenant RAG Leakage scenario
 
-[Read the Multi-tenant RAG Leakage field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/rag-tenant-isolation)
+[Read the Multi-tenant RAG Leakage field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/multi-tenant-rag-leakage)
 
 Each posture is deliberately isolated so the differences are easy to inspect:
 

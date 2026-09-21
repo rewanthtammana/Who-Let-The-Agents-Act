@@ -19,7 +19,7 @@ Thanks for helping improve Who Let the Agents Act.
 
 ## Adding a scenario
 
-Start by copying [`templates/scenario`](./templates/scenario) to `scenarios/<directory_name>`. Keep the directory name lowercase with underscores; use a lowercase kebab-case public `id` in `scenario.json`.
+Start by copying [`templates/scenario`](./templates/scenario) to `scenarios/<directory_name>`. Keep the directory name lowercase with underscores and use a stable lowercase kebab-case internal `id` in `scenario.json`. Add a title-aligned public `slug` and an `aliases` array containing any previous public names so old links continue to redirect.
 
 Each scenario is self-contained and must include:
 

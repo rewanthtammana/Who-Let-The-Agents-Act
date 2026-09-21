@@ -1,5 +1,7 @@
 {
   "id": "overpowered-data-tool",
+  "slug": "overpowered-data-tool",
+  "aliases": [],
   "number": 1,
   "title": "Overpowered Data Tool",
   "domain": "Data security",

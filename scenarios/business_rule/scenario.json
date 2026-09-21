@@ -1,5 +1,7 @@
 {
   "id": "business-rule",
+  "slug": "refund-limit-bypass",
+  "aliases": ["business-rule"],
   "number": 4,
   "title": "Refund Limit Bypass",
   "domain": "Tool security",

@@ -1,6 +1,6 @@
 # Refund Limit Bypass scenario
 
-[Read the Refund Limit Bypass field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/business-rule)
+[Read the Refund Limit Bypass field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/refund-limit-bypass)
 
 Each posture is deliberately isolated so the differences are easy to inspect:
 

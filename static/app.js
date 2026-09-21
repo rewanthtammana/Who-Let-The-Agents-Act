@@ -149,7 +149,7 @@ function renderScenarioLibrary() {
     const active = document.body.classList.contains("scenario-focused") && item.id === state.scenario?.id;
     const number = String(item.number).padStart(2, "0");
     const category = item.category || item.domain || "Agent security";
-    return `<button class="scenario-tile ${active ? "active" : ""}" type="button" role="listitem" data-scenario-id="${escapeHtml(item.id)}" aria-pressed="${active}">
+    return `<button class="scenario-tile ${active ? "active" : ""}" type="button" role="listitem" data-scenario-id="${escapeHtml(item.slug)}" aria-pressed="${active}">
       <span class="scenario-tile-top"><small>${number} · ${escapeHtml(category)}</small><span class="scenario-tile-severity severity ${escapeHtml(String(item.severity || "high").toLowerCase())}">${escapeHtml(String(item.severity || "High").toUpperCase())}</span></span>
       <strong>${escapeHtml(item.title)}</strong>
       <span class="scenario-tile-type">${escapeHtml(item.vulnerability_type || "Agent security scenario")}</span>
@@ -194,7 +194,7 @@ function syncCustomScenarioSelect() {
 
   const currentVal = select.value;
   const isFocused = document.body.classList.contains("scenario-focused");
-  const selectedItem = scenarioCatalog.find((item) => item.id === currentVal);
+  const selectedItem = scenarioCatalog.find((item) => item.slug === currentVal);
 
   if (selectedItem && isFocused) {
     const num = String(selectedItem.number).padStart(2, "0");
@@ -212,10 +212,10 @@ function syncCustomScenarioSelect() {
   `;
 
   html += scenarioCatalog.map((item) => {
-    const isSelected = isFocused && item.id === currentVal;
+    const isSelected = isFocused && item.slug === currentVal;
     const num = String(item.number).padStart(2, "0");
     return `
-      <button type="button" class="custom-select-option ${isSelected ? "active" : ""}" role="option" data-value="${escapeHtml(item.id)}" aria-selected="${isSelected}">
+      <button type="button" class="custom-select-option ${isSelected ? "active" : ""}" role="option" data-value="${escapeHtml(item.slug)}" aria-selected="${isSelected}">
         <span class="custom-select-num">${num}</span>
         <span class="custom-select-title">${escapeHtml(item.title)}</span>
         ${isSelected ? '<span class="custom-select-check" aria-hidden="true">✓</span>' : ''}
@@ -253,10 +253,14 @@ async function init() {
   const catalog = await catalogResponse.json();
   scenarioCatalog = catalog;
   if (generation !== interactionGeneration) return;
-  $("#scenario-select").innerHTML = `<option value="" disabled>CHOOSE A SCENARIO</option>${catalog.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(String(item.number).padStart(2, "0"))} · ${escapeHtml(item.title)}</option>`).join("")}`;
-  const selectedScenario = locationScenario();
-  $("#scenario-select").value = selectedScenario || catalog[0].id;
-  const [scenarioResponse, healthResponse, capacityResponse] = await Promise.all([fetch(appUrl(`/api/scenario?scenario_id=${encodeURIComponent($("#scenario-select").value)}`), { cache: "no-store" }), fetch(appUrl("/api/health"), { cache: "no-store" }), fetch(appUrl("/api/capacity"), { cache: "no-store" })]);
+  $("#scenario-select").innerHTML = `<option value="" disabled>CHOOSE A SCENARIO</option>${catalog.map((item) => `<option value="${escapeHtml(item.slug)}">${escapeHtml(String(item.number).padStart(2, "0"))} · ${escapeHtml(item.title)}</option>`).join("")}`;
+  const requestedScenario = locationScenario();
+  const selectedCatalogScenario = requestedScenario
+    ? catalog.find((item) => item.slug === requestedScenario || item.id === requestedScenario || (item.aliases || []).includes(requestedScenario))
+    : null;
+  const selectedScenario = selectedCatalogScenario?.slug || null;
+  $("#scenario-select").value = selectedScenario || catalog[0].slug;
+  const [scenarioResponse, healthResponse, capacityResponse] = await Promise.all([fetch(appUrl(`/api/scenarios/${encodeURIComponent($("#scenario-select").value)}`), { cache: "no-store" }), fetch(appUrl("/api/health"), { cache: "no-store" }), fetch(appUrl("/api/capacity"), { cache: "no-store" })]);
   if (generation !== interactionGeneration) return;
   if (!scenarioResponse.ok || !healthResponse.ok || !capacityResponse.ok) throw new Error("The lab could not initialize.");
   state.scenario = await scenarioResponse.json();
@@ -275,18 +279,18 @@ async function init() {
   setScenarioView(Boolean(selectedScenario));
   syncCustomScenarioSelect();
   if (selectedScenario) trackScenarioOpened(state.scenario.id);
-  if (selectedScenario && window.location.pathname !== appUrl(`/lab/${encodeURIComponent(selectedScenario)}`)) history.replaceState(null, "", appUrl(`/lab/${encodeURIComponent(selectedScenario)}`));
+  if (selectedScenario && window.location.pathname !== appUrl(`/lab/${encodeURIComponent(state.scenario.slug)}`)) history.replaceState(null, "", appUrl(`/lab/${encodeURIComponent(state.scenario.slug)}`));
 }
 
 async function switchScenario() {
   interactionGeneration += 1;
   const generation = interactionGeneration;
-  const id = $("#scenario-select").value;
-  if (!id) return;
-  const response = await fetch(appUrl(`/api/scenario?scenario_id=${encodeURIComponent(id)}`), { cache: "no-store" });
+  const slug = $("#scenario-select").value;
+  if (!slug) return;
+  const response = await fetch(appUrl(`/api/scenarios/${encodeURIComponent(slug)}`), { cache: "no-store" });
   if (generation !== interactionGeneration) return;
   state.scenario = await response.json();
-  history.replaceState(null, "", appUrl(`/lab/${encodeURIComponent(id)}`));
+  history.replaceState(null, "", appUrl(`/lab/${encodeURIComponent(state.scenario.slug)}`));
   renderScenarioMeta(); $("#summary").textContent = state.scenario.summary; $("#lesson").textContent = state.scenario.lesson;
   $("#database-path").textContent = state.scenario.database.path;
   updateDatabaseStatus(state.scenario.database);
@@ -310,7 +314,7 @@ async function uploadInvoice() {
   button.disabled = true;
   $("#upload-status").textContent = `Reading ${file.name}…`;
   try {
-    const response = await fetch(appUrl(`/api/scenarios/indirect-injection/invoices/upload?invoice_id=INV-884&filename=${encodeURIComponent(file.name)}`), { method: "POST", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file });
+    const response = await fetch(appUrl(`/api/scenarios/${encodeURIComponent(state.scenario.slug)}/invoices/upload?invoice_id=INV-884&filename=${encodeURIComponent(file.name)}`), { method: "POST", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.detail || "The invoice upload failed.");
     $("#upload-status").textContent = `Uploaded ${payload.filename} to ${payload.invoice_id} (${payload.characters} text characters). Run the agent to inspect it.`;
@@ -320,7 +324,7 @@ async function uploadInvoice() {
 }
 
 async function refreshScenarioState() {
-  const response = await fetch(appUrl(`/api/scenario?scenario_id=${encodeURIComponent(state.scenario.id)}`), { cache: "no-store" });
+  const response = await fetch(appUrl(`/api/scenarios/${encodeURIComponent(state.scenario.slug)}`), { cache: "no-store" });
   if (!response.ok) throw new Error("The scenario state could not be refreshed.");
   state.scenario = await response.json();
   updateDatabaseStatus(state.scenario.database);
@@ -333,7 +337,7 @@ async function setDependencyState(dependencyState) {
   const buttons = document.querySelectorAll("[data-dependency-state]");
   buttons.forEach((button) => { button.disabled = true; });
   try {
-    const response = await fetch(appUrl(`/api/scenarios/approval-service-outage/dependency/${encodeURIComponent(dependencyState)}`), { method: "POST" });
+    const response = await fetch(appUrl(`/api/scenarios/${encodeURIComponent(state.scenario.slug)}/dependency/${encodeURIComponent(dependencyState)}`), { method: "POST" });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.detail || "The dependency simulator could not be changed.");
     await refreshScenarioState();
@@ -344,7 +348,7 @@ async function setDependencyState(dependencyState) {
 
 async function loadInvoiceFixture(variant) {
   $("#upload-status").textContent = `Loading ${variant} fixture…`;
-  const response = await fetch(appUrl(`/api/scenarios/indirect-injection/invoices/fixture/${encodeURIComponent(variant)}`), { method: "POST" });
+  const response = await fetch(appUrl(`/api/scenarios/${encodeURIComponent(state.scenario.slug)}/invoices/fixture/${encodeURIComponent(variant)}`), { method: "POST" });
   const payload = await response.json();
   if (!response.ok) throw new Error(payload.detail || "The invoice fixture could not be loaded.");
   $("#upload-status").textContent = `Loaded ${payload.variant} fixture (${payload.filename}).`;
@@ -355,7 +359,7 @@ async function resetScenario() {
   const button = $("#reset-scenario");
   button.disabled = true;
   try {
-    const response = await fetch(appUrl(`/api/scenarios/${encodeURIComponent(state.scenario.id)}/reset`), { method: "POST" });
+    const response = await fetch(appUrl(`/api/scenarios/${encodeURIComponent(state.scenario.slug)}/reset`), { method: "POST" });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.detail || "The scenario could not be reset.");
     await refreshScenarioState();

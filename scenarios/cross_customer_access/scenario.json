@@ -1,5 +1,7 @@
 {
   "id": "cross-customer-access",
+  "slug": "cross-account-access",
+  "aliases": ["cross-customer-access"],
   "number": 2,
   "title": "Cross-Account Access",
   "domain": "Identity & authorization",

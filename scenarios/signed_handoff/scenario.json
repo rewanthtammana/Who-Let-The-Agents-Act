@@ -1,5 +1,7 @@
 {
   "id": "signed-handoff",
+  "slug": "unsafe-agent-handoff",
+  "aliases": ["signed-handoff"],
   "number": 3,
   "title": "Unsafe Agent Handoff",
   "domain": "Multi-agent security",

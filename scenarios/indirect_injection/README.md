@@ -1,6 +1,6 @@
 # Poisoned Invoice Instructions scenario
 
-[Read the Poisoned Invoice Instructions field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/indirect-injection)
+[Read the Poisoned Invoice Instructions field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/poisoned-invoice-instructions)
 
 Each posture is deliberately isolated so the differences are easy to inspect:
 

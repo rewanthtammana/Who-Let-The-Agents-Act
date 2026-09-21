@@ -102,7 +102,7 @@ function renderIndex(posts) {
     <div class="post-grid">
       ${posts.map((post) => {
         const thumbnailSrc = post.article_thumbnail
-          ? appUrl(`/api/scenario-assets/${encodeURIComponent(post.id)}/${encodeURIComponent(post.article_thumbnail)}?v=20260915-field-guide-thumbnails1`)
+          ? appUrl(`/api/scenario-assets/${encodeURIComponent(post.slug)}/${encodeURIComponent(post.article_thumbnail)}?v=20260915-field-guide-thumbnails1`)
           : "";
         return `
         <a class="post-card" href="${escapeHtml(appLink(post.url))}">
@@ -303,7 +303,7 @@ function renderArticle(post, posts) {
   const next = current < posts.length - 1 ? posts[current + 1] : null;
   const hasPrimer = Boolean(post.story_heading || post.goal || post.architecture?.length);
   const articleHeroSrc = post.article_hero
-    ? appUrl(`/api/scenario-assets/${encodeURIComponent(post.id)}/${encodeURIComponent(post.article_hero)}?v=20260915-article-hero2`)
+    ? appUrl(`/api/scenario-assets/${encodeURIComponent(post.slug)}/${encodeURIComponent(post.article_hero)}?v=20260915-article-hero2`)
     : "";
   const attackPresetLabel = "Vulnerable-mode attack";
   const bypassPresetLabel = "Prompt-only bypass";
@@ -385,7 +385,7 @@ function renderArticle(post, posts) {
         ${hasPrimer && post.screenshots?.length ? `<section id="live-captures" class="article-section live-captures">
           <p class="section-number">04 / LIVE LAB CAPTURES</p><h2>See the difference immediately</h2>
           <p>These captures come from real local runs with synthetic lab data. Compare what the vulnerable tool returned with what application policy allowed through.</p>
-          ${renderScreenshots(post.screenshots, post.id)}
+          ${renderScreenshots(post.screenshots, post.slug)}
         </section>` : ""}
 
         <section id="threat-model" class="article-section">
@@ -440,6 +440,7 @@ function renderArticle(post, posts) {
         ${renderTocLinks(post, hasPrimer)}
       </aside>
     </div>`;
+  document.dispatchEvent(new CustomEvent("wlaa:scenario-change", { detail: { scenarioId: post.id } }));
   setupScreenshotLightbox();
   setupArticleNavigation();
   setupShareMenus();

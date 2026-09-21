@@ -1,6 +1,6 @@
 # Secret Leakage Through Debugging scenario
 
-[Read the Secret Leakage Through Debugging field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/secret-leakage)
+[Read the Secret Leakage Through Debugging field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/secret-leakage-through-debugging)
 
 Each posture is deliberately isolated so the differences are easy to inspect:
 

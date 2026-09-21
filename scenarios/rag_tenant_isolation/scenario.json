@@ -1,5 +1,7 @@
 {
   "id": "rag-tenant-isolation",
+  "slug": "multi-tenant-rag-leakage",
+  "aliases": ["rag-tenant-isolation"],
   "number": 6,
   "title": "Multi-tenant RAG Leakage",
   "domain": "RAG security",

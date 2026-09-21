@@ -63,15 +63,16 @@ def main() -> int:
 
     for scenario in scenarios:
         scenario_id = scenario["id"]
+        scenario_slug = scenario["slug"]
         if scenario_id in RESETTABLE:
-            post_empty(args.base_url, f"/api/scenarios/{scenario_id}/reset")
+            post_empty(args.base_url, f"/api/scenarios/{scenario_slug}/reset")
         for preset in ("normal", "attack", "bypass"):
             if scenario_id == "indirect-injection":
                 fixture = {"normal": "clean", "attack": "attack", "bypass": "bypass"}[preset]
-                post_empty(args.base_url, f"/api/scenarios/indirect-injection/invoices/fixture/{fixture}")
+                post_empty(args.base_url, f"/api/scenarios/{scenario_slug}/invoices/fixture/{fixture}")
             if scenario_id == "approval-service-outage":
                 dependency = "healthy" if preset == "normal" else "timeout"
-                post_empty(args.base_url, f"/api/scenarios/approval-service-outage/dependency/{dependency}")
+                post_empty(args.base_url, f"/api/scenarios/{scenario_slug}/dependency/{dependency}")
             for mode in ("vulnerable", "prompt_only", "hardened"):
                 result = request(
                     args.base_url,

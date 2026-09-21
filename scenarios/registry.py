@@ -12,6 +12,7 @@ per-browser-session instances in ``app.py``.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from scenarios.approval_service_outage.agent import ApprovalOutageAgent
@@ -58,5 +59,30 @@ _registrations = [
 ]
 
 SCENARIOS = {config["id"]: entry for entry in (_register(*item) for item in _registrations) for config in [entry[0]]}
+
+SCENARIO_NAME_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+SCENARIO_NAMES: dict[str, str] = {}
+for scenario_id, (config, _, _, _) in SCENARIOS.items():
+    slug = config.get("slug")
+    aliases = config.get("aliases")
+    if not isinstance(slug, str) or not SCENARIO_NAME_PATTERN.fullmatch(slug):
+        raise ValueError(f"Scenario {scenario_id} has an invalid public slug")
+    if not isinstance(aliases, list) or not all(isinstance(alias, str) and SCENARIO_NAME_PATTERN.fullmatch(alias) for alias in aliases):
+        raise ValueError(f"Scenario {scenario_id} has invalid aliases")
+    for name in (scenario_id, slug, *aliases):
+        existing_id = SCENARIO_NAMES.get(name)
+        if existing_id is not None and existing_id != scenario_id:
+            raise ValueError(f"Scenario name {name} is already assigned to {existing_id}")
+        SCENARIO_NAMES[name] = scenario_id
+
+
+def scenario_id_for_name(name: str) -> str | None:
+    return SCENARIO_NAMES.get(name)
+
+
+def scenario_slug(scenario_id: str) -> str:
+    return str(SCENARIOS[scenario_id][0]["slug"])
+
+
 DATABASE = SCENARIOS["overpowered-data-tool"][1]
 INJECTION_ROOT = SCENARIOS["indirect-injection"][3]

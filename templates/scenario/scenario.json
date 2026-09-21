@@ -1,5 +1,7 @@
 {
   "id": "example-scenario",
+  "slug": "example-scenario",
+  "aliases": [],
   "title": "Example Scenario",
   "number": 99,
   "dek": "One sentence describing the lesson.",

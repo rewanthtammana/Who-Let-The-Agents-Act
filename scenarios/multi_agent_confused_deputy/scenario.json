@@ -1,5 +1,7 @@
 {
   "id": "multi-agent-confused-deputy",
+  "slug": "confused-deputy-agent-chain",
+  "aliases": ["multi-agent-confused-deputy"],
   "number": 9,
   "title": "Confused Deputy Agent Chain",
   "domain": "Multi-agent security",

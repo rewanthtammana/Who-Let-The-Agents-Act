@@ -1,5 +1,7 @@
 {
   "id": "secret-leakage",
+  "slug": "secret-leakage-through-debugging",
+  "aliases": ["secret-leakage"],
   "number": 7,
   "title": "Secret Leakage Through Debugging",
   "domain": "Data security",

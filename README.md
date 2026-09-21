@@ -61,14 +61,14 @@ The model can propose an intent, identifier, field, or action. Application code 
 The lab includes nine focused scenarios. Each one is self-contained with its own database, seed data, prompts, tools, policies, and run artifacts.
 
 - [x] [**Overpowered Data Tool**](https://rewanthtammana.com/who-let-the-agents-act/blog/overpowered-data-tool) - excessive data access and PII exposure
-- [x] [**Cross-Account Access**](https://rewanthtammana.com/who-let-the-agents-act/blog/cross-customer-access) - IDOR and broken object-level authorization
-- [x] [**Unsafe Agent Handoff**](https://rewanthtammana.com/who-let-the-agents-act/blog/signed-handoff) - trust-boundary over-sharing
-- [x] [**Refund Limit Bypass**](https://rewanthtammana.com/who-let-the-agents-act/blog/business-rule) - business-logic enforcement failure
-- [x] [**Poisoned Invoice Instructions**](https://rewanthtammana.com/who-let-the-agents-act/blog/indirect-injection) - indirect prompt injection
-- [x] [**Multi-tenant RAG Leakage**](https://rewanthtammana.com/who-let-the-agents-act/blog/rag-tenant-isolation) - tenant isolation failure during retrieval
-- [x] [**Secret Leakage Through Debugging**](https://rewanthtammana.com/who-let-the-agents-act/blog/secret-leakage) - secrets crossing diagnostics boundaries
+- [x] [**Cross-Account Access**](https://rewanthtammana.com/who-let-the-agents-act/blog/cross-account-access) - IDOR and broken object-level authorization
+- [x] [**Unsafe Agent Handoff**](https://rewanthtammana.com/who-let-the-agents-act/blog/unsafe-agent-handoff) - trust-boundary over-sharing
+- [x] [**Refund Limit Bypass**](https://rewanthtammana.com/who-let-the-agents-act/blog/refund-limit-bypass) - business-logic enforcement failure
+- [x] [**Poisoned Invoice Instructions**](https://rewanthtammana.com/who-let-the-agents-act/blog/poisoned-invoice-instructions) - indirect prompt injection
+- [x] [**Multi-tenant RAG Leakage**](https://rewanthtammana.com/who-let-the-agents-act/blog/multi-tenant-rag-leakage) - tenant isolation failure during retrieval
+- [x] [**Secret Leakage Through Debugging**](https://rewanthtammana.com/who-let-the-agents-act/blog/secret-leakage-through-debugging) - secrets crossing diagnostics boundaries
 - [x] [**Approval Service Outage**](https://rewanthtammana.com/who-let-the-agents-act/blog/approval-service-outage) - fail-open authorization dependency
-- [x] [**Confused Deputy Agent Chain**](https://rewanthtammana.com/who-let-the-agents-act/blog/multi-agent-confused-deputy) - multi-hop injection across agent boundaries
+- [x] [**Confused Deputy Agent Chain**](https://rewanthtammana.com/who-let-the-agents-act/blog/confused-deputy-agent-chain) - multi-hop injection across agent boundaries
 
 ## Install and run
 

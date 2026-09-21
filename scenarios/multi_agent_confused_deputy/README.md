@@ -1,6 +1,6 @@
 # Confused Deputy Agent Chain scenario
 
-[Read the Confused Deputy Agent Chain field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/multi-agent-confused-deputy)
+[Read the Confused Deputy Agent Chain field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/confused-deputy-agent-chain)
 
 Each posture is deliberately isolated so the differences are easy to inspect:
 
