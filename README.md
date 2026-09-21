@@ -1,7 +1,17 @@
 <h1 align="center">Who Let the Agents Act?</h1>
 
 <p align="center">
-  <strong>Agentic AI security labs for finding the boundary between a model request and an allowed action.</strong>
+  <strong>Hands-on agent security labs that show what happens when AI agents get authority they should not have.</strong>
+</p>
+
+<p align="center">
+  <a href="https://rewanthtammana.com/who-let-the-agents-act/lab/overpowered-data-tool"><strong>Try the live labs →</strong></a>
+  &nbsp; | &nbsp;
+  <a href="https://rewanthtammana.com/who-let-the-agents-act/blog">Read the field guide</a>
+  &nbsp; | &nbsp;
+  <a href="#install-and-run">Run locally</a>
+  &nbsp; | &nbsp;
+  <a href="TECHNICALS.md">View the architecture</a>
 </p>
 
 <p align="center">
@@ -22,21 +32,19 @@
   </a> -->
 </p>
 
-<p align="center">
-  <a href="#install-and-run">Run the lab locally</a>
-  &nbsp; | &nbsp;
-  <a href="https://rewanthtammana.com/who-let-the-agents-act/blog">Read the field guide</a>
-  &nbsp; | &nbsp;
-  <a href="TECHNICALS.md">View the architecture</a>
-</p>
-
 ![Who Let the Agents Act](static/social-preview.png)
 
-## About the lab
+## How it works
 
-**Who Let the Agents Act** is an interactive lab for learning where agent security boundaries belong: outside the prompt, at the application, identity, data, retrieval, and tool boundaries.
+Ask an agent authenticated as Customer A to retrieve Customer B's data:
 
-Run the same natural-language request against three postures - **Vulnerable**, **Prompt-only**, and **Hardened** - then compare what the agent plans, what the application allows, and what reaches the final response. Every scenario uses synthetic data and produces inspectable evidence.
+| Mode | What happens | Security boundary |
+| --- | --- | --- |
+| **Vulnerable** | The overpowered tool returns the other customer's data. | Model-controlled request and raw tool result |
+| **Prompt-only** | The model is told not to, but the application still gives it the authority. | Model-controlled prompt guard, unsafe execution path |
+| **Hardened** | Application authorization blocks the cross-account request before data is exposed. | Application policy, least-privilege data access, and output DLP |
+
+The model can propose an intent, identifier, field, or action. Application code validates the proposal and enforces the final decision before a database or side-effecting tool is reached. Run the same request against all three modes, then inspect the decision and execution trace.
 
 > **Security warning:** This project intentionally contains vulnerable implementations for educational and research purposes. All included data is synthetic. Do not connect vulnerable modes to production data, credentials, accounts, payment systems, or other sensitive environments.
 
@@ -81,16 +89,6 @@ docker compose up --build -d
 
 The app is then available at <http://127.0.0.1:8000>. See [TECHNICALS.md](TECHNICALS.md) for deployment, configuration, and verification details.
 
-## How the three modes work
-
-| Mode | Purpose | Security boundary |
-| --- | --- | --- |
-| **Vulnerable** | Shows the unsafe baseline | Model-controlled request and raw tool result |
-| **Prompt-only** | Tests whether instructions are enough | Model-controlled prompt guard, unsafe execution path |
-| **Hardened** | Demonstrates the contained design | Application policy, least-privilege data access, and output DLP |
-
-The model can propose an intent, identifier, field, or action. Application code validates the proposal and enforces the final decision before a database or side-effecting tool is reached.
-
 ## Evidence and verification
 
 Each run records the important stages in inspectable JSON artifacts under the scenario's generated `_runs/` directory. The UI exposes the trace, controls, evidence, and resulting verdict so the attack path can be compared directly.
@@ -114,8 +112,6 @@ python3 scripts/verify_matrix.py
 ## Project documentation
 
 - [Technical architecture, deployment, and verification](TECHNICALS.md)
-- [Field guide](https://rewanthtammana.com/who-let-the-agents-act/blog)
-- [Contributing](CONTRIBUTING.md)
 - [Security and responsible disclosure](SECURITY.md)
 
 ## References

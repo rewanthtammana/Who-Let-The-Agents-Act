@@ -28,6 +28,7 @@ const APP_BASE_PATH = configuredBasePath || (window.location.pathname === APP_PA
 const appUrl = (path) => `${APP_BASE_PATH}${path}`;
 const analyticsModes = new Set(["vulnerable", "prompt_only", "hardened"]);
 const analyticsVerdicts = new Set(["exposed", "refused", "contained", "allowed"]);
+const startedLabs = new Set();
 function trackAnalyticsEvent(name, params) {
   if (typeof window.gtag !== "function") return;
   window.gtag("event", name, params);
@@ -45,6 +46,23 @@ function trackScenarioRun(name, scenarioId, mode, runType, verdict) {
   const params = { scenario_id: scenarioId, mode, run_type: runType === "compare" ? "compare" : "single" };
   if (analyticsVerdicts.has(verdict)) params.verdict = verdict;
   trackAnalyticsEvent(name, params);
+}
+function trackLabInteraction(scenarioId, runType) {
+  if (!/^[a-z0-9-]+$/.test(scenarioId || "")) return;
+  if (!startedLabs.has(scenarioId)) {
+    startedLabs.add(scenarioId);
+    trackAnalyticsEvent("lab_started", { scenario_id: scenarioId });
+  }
+  const params = { scenario_id: scenarioId, run_type: runType === "compare" ? "compare" : "single" };
+  if (runType !== "compare") params.mode = analyticsModes.has(state.mode) ? state.mode : "vulnerable";
+  trackAnalyticsEvent("prompt_submitted", params);
+}
+function trackCompletedRun(result, runType) {
+  const scenarioId = result.scenario_id || state.scenario?.id;
+  const mode = result.mode || state.mode;
+  if (!/^[a-z0-9-]+$/.test(scenarioId || "") || !analyticsModes.has(mode) || !analyticsVerdicts.has(result.verdict)) return;
+  const params = { scenario_id: scenarioId, mode, verdict: result.verdict, run_type: runType === "compare" ? "compare" : "single" };
+  if (result.verdict === "exposed") trackAnalyticsEvent("attack_succeeded", params);
 }
 document.querySelectorAll("[data-app-path]").forEach((link) => {
   link.href = appUrl(link.dataset.appPath);
@@ -65,8 +83,18 @@ function updateLandingDatabaseStatus() {
   $("#db-status").classList.add("hidden");
 }
 
+function setGithubScenarioContext(scenarioId) {
+  const validScenarioId = /^[a-z0-9-]+$/.test(scenarioId || "") ? scenarioId : "";
+  document.querySelectorAll("a[data-github-location]").forEach((link) => {
+    if (validScenarioId) link.dataset.scenarioId = validScenarioId;
+    else delete link.dataset.scenarioId;
+  });
+  document.dispatchEvent(new CustomEvent("wlaa:scenario-change", { detail: { scenarioId: validScenarioId } }));
+}
+
 function renderScenarioMeta() {
   const scenario = state.scenario;
+  setGithubScenarioContext(locationScenario() ? scenario.id : "");
   const category = scenario.category || scenario.domain;
   const vulnerability = scenario.vulnerability_type || "Agent security vulnerability";
   $("#title").textContent = scenario.title;
@@ -264,6 +292,7 @@ async function switchScenario() {
 
 function showScenarioIndex() {
   history.replaceState(null, "", appUrl("/"));
+  setGithubScenarioContext("");
   setScenarioView(false, true);
   window.setTimeout(() => $("#scenario-library").scrollIntoView({ behavior: "smooth", block: "start" }), 80);
 }
@@ -413,6 +442,26 @@ function clearResult() {
   $("#trace-jump").classList.add("hidden");
   $("#trace-jump-console").classList.add("hidden");
   $("#badge").textContent = "WAITING";
+  resetImplementationCta();
+}
+
+function resetImplementationCta() {
+  const cta = $("#implementation-cta");
+  const link = cta.querySelector("a[data-github-location]");
+  cta.classList.add("hidden");
+  delete link.dataset.mode;
+  delete link.dataset.verdict;
+  delete link.dataset.runType;
+}
+
+function showImplementationCta(result, runType) {
+  resetImplementationCta();
+  if (result.mode !== "hardened" || !["contained", "refused"].includes(result.verdict)) return;
+  const link = $("#implementation-cta a[data-github-location]");
+  link.dataset.mode = result.mode;
+  link.dataset.verdict = result.verdict;
+  link.dataset.runType = runType === "compare" ? "compare" : "single";
+  $("#implementation-cta").classList.remove("hidden");
 }
 
 function showPending(message, detail) {
@@ -423,6 +472,9 @@ function showPending(message, detail) {
 
 async function requestRun(mode, prompt, runType = "single") {
   trackScenarioRun("scenario_run", state.scenario.id, mode, runType);
+  if (mode === "hardened") {
+    trackAnalyticsEvent("hardened_tested", { scenario_id: state.scenario.id, mode, run_type: runType === "compare" ? "compare" : "single" });
+  }
   showPending("The agent is working", "Planning, tool execution, and security checks will appear here when the run completes.");
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), RUN_TIMEOUT_MS);
@@ -447,6 +499,7 @@ async function requestRun(mode, prompt, runType = "single") {
     throw new Error(payload.detail || "The agent run failed.");
   }
   trackScenarioRun("scenario_completed", payload.scenario_id || state.scenario.id, payload.mode || mode, runType, payload.verdict);
+  trackCompletedRun(payload, runType);
   try {
     const capacityResponse = await fetch(appUrl("/api/capacity"), { cache: "no-store" });
     if (capacityResponse.ok) state.capacity = await capacityResponse.json();
@@ -459,6 +512,7 @@ async function requestRun(mode, prompt, runType = "single") {
 async function runAgent() {
   const prompt = $("#prompt").value.trim();
   if (!prompt) return;
+  trackLabInteraction(state.scenario.id, "single");
   const generation = interactionGeneration;
   const button = $("#run");
   button.disabled = true;
@@ -484,6 +538,7 @@ async function runAgent() {
 async function compareModes() {
   const prompt = $("#prompt").value.trim();
   if (!prompt) return;
+  trackLabInteraction(state.scenario.id, "compare");
   const generation = interactionGeneration;
   const button = $("#compare");
   button.disabled = true;
@@ -540,6 +595,8 @@ async function compareModes() {
     }
     currentComparisonResults = results;
     currentRunResult = null;
+    const hardenedResult = results.find((result) => result.mode === "hardened" && ["contained", "refused"].includes(result.verdict));
+    if (hardenedResult) showImplementationCta(hardenedResult, "compare");
     $("#badge").textContent = "THREE-POSTURE COMPARISON";
   } catch (error) {
     if (generation === interactionGeneration) {
@@ -566,6 +623,7 @@ function renderResult(result) {
   $("#verdict").textContent = result.verdict;
   $("#response").textContent = result.response;
   $("#result-summary").textContent = result.summary;
+  showImplementationCta(result, "single");
   const safe = ["allowed", "contained", "refused"].includes(result.verdict);
   $("#verdict-dot").className = safe ? "safe" : "danger";
   $("#response").className = safe ? "safe-border" : "danger-border";
@@ -599,6 +657,19 @@ function renderError(message) {
   $("#result-summary").textContent = "No scripted fallback was used. Fix the model or database error and run again.";
   $("#trace-jump").classList.add("hidden");
   $("#trace-jump-console").classList.add("hidden");
+  resetImplementationCta();
+}
+
+function trackTraceOpened() {
+  if (!state.scenario) return;
+  const result = currentRunResult;
+  const params = {
+    scenario_id: state.scenario.id,
+    mode: result && analyticsModes.has(result.mode) ? result.mode : (analyticsModes.has(state.mode) ? state.mode : "vulnerable"),
+  };
+  if (result && analyticsVerdicts.has(result.verdict)) params.verdict = result.verdict;
+  if (result) params.run_type = "single";
+  trackAnalyticsEvent("trace_opened", params);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -616,6 +687,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#upload-invoice").addEventListener("click", uploadInvoice);
   $("#reset-scenario").addEventListener("click", resetScenario);
   $("#reset-session").addEventListener("click", resetSession);
+  ["#trace-jump", "#trace-jump-console"].forEach((selector) => $(selector).addEventListener("click", trackTraceOpened));
   document.querySelectorAll("[data-invoice-fixture]").forEach((button) => button.addEventListener("click", () => loadInvoiceFixture(button.dataset.invoiceFixture).catch((error) => { $("#upload-status").textContent = error.message; })));
   document.querySelectorAll("[data-dependency-state]").forEach((button) => button.addEventListener("click", () => setDependencyState(button.dataset.dependencyState)));
   $("#scenario-grid").addEventListener("click", (event) => {
