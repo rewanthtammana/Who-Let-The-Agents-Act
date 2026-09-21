@@ -38,8 +38,8 @@ PUBLIC_SITE_ROOT = "https://rewanthtammana.com/who-let-the-agents-act"
 PUBLIC_ASSET_ORIGIN = "https://who-let-the-agents-act.rewanthtammana.com"
 PUBLIC_APP_BASE_PATH = os.getenv("PUBLIC_APP_BASE_PATH", "/who-let-the-agents-act")
 APP_STYLESHEET_VERSION = "20260921-funnel4"
-APP_SCRIPT_VERSION = "20260921-funnel3"
-BLOG_ASSET_VERSION = "20260918-all-scenarios3"
+APP_SCRIPT_VERSION = "20260921-basepath2"
+BLOG_ASSET_VERSION = "20260921-basepath2"
 SITE_HEADER_ASSET_VERSION = "20260915-unified1"
 GITHUB_CALLOUT_ASSET_VERSION = "20260915-callout6"
 GITHUB_CALLOUT_SCRIPT_VERSION = "20260921-funnel3"
@@ -278,11 +278,10 @@ class SlidingWindowRateLimitMiddleware(BaseHTTPMiddleware):
 
 @app.middleware("http")
 async def app_base_path_middleware(request: Request, call_next):
-    base_path = normalize_base_path(PUBLIC_APP_BASE_PATH)
-    if base_path and request.scope["path"] == base_path:
-        request.scope["path"] = "/"
-    elif base_path and request.scope["path"].startswith(f"{base_path}/"):
-        request.scope["path"] = request.scope["path"][len(base_path):]
+    request.scope["path"] = normalized_route_path(request.scope["path"])
+    canonical_location = canonical_route_location(request)
+    if canonical_location is not None:
+        return RedirectResponse(canonical_location, status_code=308)
     return await call_next(request)
 
 
@@ -446,6 +445,26 @@ def normalize_base_path(value: str) -> str:
     return "/" + value.strip("/")
 
 
+def normalized_route_path(path: str) -> str:
+    """Remove the public mount prefix before internal route matching."""
+    base_path = normalize_base_path(PUBLIC_APP_BASE_PATH)
+    if base_path and path == base_path:
+        path = "/"
+    elif base_path and path.startswith(f"{base_path}/"):
+        path = path[len(base_path):]
+    return path or "/"
+
+
+def canonical_route_location(request: Request) -> str | None:
+    """Return a public-host-safe canonical URL for slash-suffixed routes."""
+    path = request.scope["path"]
+    if path == "/" or not path.endswith("/"):
+        return None
+    location = app_path(request, path.rstrip("/"))
+    query = request.scope.get("query_string", b"").decode("latin-1")
+    return f"{location}?{query}" if query else location
+
+
 def request_base_path(request: Request) -> str:
     hostname = request.url.hostname or ""
     forwarded_prefix = request.headers.get("x-forwarded-prefix")
@@ -585,7 +604,7 @@ def legacy_scenario_lab(scenario_id: str, request: Request) -> RedirectResponse:
     return redirect_app_path(request, f"/lab/{scenario_id}")
 
 
-def blog_post_payload(scenario_id: str) -> dict[str, object]:
+def blog_post_payload(scenario_id: str, request: Request) -> dict[str, object]:
     if scenario_id not in SCENARIOS:
         raise HTTPException(status_code=404, detail="Scenario article not found")
     config, _, _, scenario_root = SCENARIOS[scenario_id]
@@ -596,8 +615,8 @@ def blog_post_payload(scenario_id: str) -> dict[str, object]:
     return {
         **config,
         **article,
-        "url": f"/blog/{scenario_id}",
-        "lab_url": f"/lab/{scenario_id}",
+        "url": app_path(request, f"/blog/{scenario_id}"),
+        "lab_url": app_path(request, f"/lab/{scenario_id}"),
     }
 
 
@@ -609,7 +628,7 @@ def blog(request: Request) -> HTMLResponse:
 
 @app.get("/blog/{scenario_id}")
 def blog_article(scenario_id: str, request: Request) -> HTMLResponse:
-    post = blog_post_payload(scenario_id)
+    post = blog_post_payload(scenario_id, request)
     title = str(post["title"])
     vulnerability = str(post["vulnerability_type"])
     return social_page_response(
@@ -624,14 +643,14 @@ def blog_article(scenario_id: str, request: Request) -> HTMLResponse:
 
 
 @app.get("/api/blog")
-def blog_catalog() -> list[dict[str, object]]:
-    posts = [blog_post_payload(scenario_id) for scenario_id in SCENARIOS]
+def blog_catalog(request: Request) -> list[dict[str, object]]:
+    posts = [blog_post_payload(scenario_id, request) for scenario_id in SCENARIOS]
     return sorted(posts, key=lambda post: int(post["number"]))
 
 
 @app.get("/api/blog/{scenario_id}")
-def blog_article_data(scenario_id: str) -> dict[str, object]:
-    return blog_post_payload(scenario_id)
+def blog_article_data(scenario_id: str, request: Request) -> dict[str, object]:
+    return blog_post_payload(scenario_id, request)
 
 
 @app.get("/api/health")

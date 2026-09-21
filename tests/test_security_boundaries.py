@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
+
+from starlette.requests import Request
 
 from scenarios.business_rule.database import RefundPolicyViolation
 from scenarios.business_rule.database import ScenarioDatabase as RefundDatabase
@@ -25,6 +28,101 @@ from scenarios.overpowered_data_tool.database import ScenarioDatabase as Custome
 
 
 class SecurityBoundaryTests(unittest.TestCase):
+    def production_request(self, path: str) -> Request:
+        request = Request(
+            {
+                "type": "http",
+                "http_version": "1.1",
+                "method": "GET",
+                "scheme": "https",
+                "path": path,
+                "raw_path": path.encode("utf-8"),
+                "query_string": b"",
+                "headers": [(b"host", b"rewanthtammana.com")],
+                "client": ("127.0.0.1", 12345),
+                "server": ("rewanthtammana.com", 443),
+                "root_path": "",
+            }
+        )
+        request.state.csp_nonce = "test-nonce"
+        return request
+
+    def test_production_pages_never_expose_unmounted_app_urls(self):
+        from app import PUBLIC_APP_BASE_PATH, PUBLIC_ASSET_ORIGIN, SCENARIOS, blog_post_payload, canonical_route_location, normalized_route_path, render_app_assets, render_initial_page
+
+        self.assertEqual(normalized_route_path("/blog/"), "/blog/")
+        self.assertEqual(normalized_route_path(f"{PUBLIC_APP_BASE_PATH}/blog/"), "/blog/")
+        self.assertEqual(
+            normalized_route_path(f"{PUBLIC_APP_BASE_PATH}/blog/overpowered-data-tool/"),
+            "/blog/overpowered-data-tool/",
+        )
+        self.assertEqual(
+            canonical_route_location(self.production_request("/blog/")),
+            f"{PUBLIC_APP_BASE_PATH}/blog",
+        )
+        self.assertEqual(
+            canonical_route_location(self.production_request("/blog/overpowered-data-tool/")),
+            f"{PUBLIC_APP_BASE_PATH}/blog/overpowered-data-tool",
+        )
+        self.assertEqual(
+            canonical_route_location(self.production_request("/lab/signed-handoff/")),
+            f"{PUBLIC_APP_BASE_PATH}/lab/signed-handoff",
+        )
+        self.assertIsNone(canonical_route_location(self.production_request("/blog")))
+
+        root = Path(__file__).resolve().parents[1]
+        home_template = (root / "templates" / "index.html").read_text(encoding="utf-8")
+        blog_template = (root / "templates" / "blog.html").read_text(encoding="utf-8")
+        rendered_pages = {
+            "/": render_initial_page(home_template, self.production_request("/")),
+            "/blog": render_app_assets(blog_template, self.production_request("/blog")),
+            "/blog/overpowered-data-tool": render_app_assets(
+                blog_template,
+                self.production_request("/blog/overpowered-data-tool"),
+            ),
+        }
+        for scenario_id in SCENARIOS:
+            production_post = blog_post_payload(
+                scenario_id,
+                self.production_request(f"/api/blog/{scenario_id}"),
+            )
+            self.assertEqual(
+                production_post["url"],
+                f"{PUBLIC_APP_BASE_PATH}/blog/{scenario_id}",
+            )
+            self.assertEqual(
+                production_post["lab_url"],
+                f"{PUBLIC_APP_BASE_PATH}/lab/{scenario_id}",
+            )
+
+        for template in (home_template, blog_template):
+            self.assertIsNone(
+                re.search(r'href="/(?:api|blog|lab)(?:/|\")', template),
+                "Templates must not contain unsafe root-level fallback links.",
+            )
+            for tag in re.findall(r'<a\b[^>]*\bdata-app-path="[^"]+"[^>]*>', template):
+                self.assertNotIn("href=", tag, "App-path links must not contain placeholder href values.")
+
+        for route, rendered in rendered_pages.items():
+            self.assertIn(
+                f'<meta name="wlaa-base-path" content="{PUBLIC_APP_BASE_PATH}"',
+                rendered,
+                route,
+            )
+            for tag in re.findall(r'<a\b[^>]*\bdata-app-path="[^"]+"[^>]*>', rendered):
+                self.assertRegex(tag, r'\bhref="[^"]+"', f"{route} did not render an app-path href.")
+            for attribute, url in re.findall(r'\b(href|src)="([^"]+)"', rendered):
+                if url.startswith("/"):
+                    self.assertTrue(
+                        url == PUBLIC_APP_BASE_PATH or url.startswith(f"{PUBLIC_APP_BASE_PATH}/"),
+                        f"{route} exposes unmounted {attribute} URL: {url}",
+                    )
+                if "/static/" in url:
+                    self.assertTrue(
+                        url.startswith(f"{PUBLIC_ASSET_ORIGIN}/static/"),
+                        f"{route} exposes a production asset on the wrong origin: {url}",
+                    )
+
     def test_scenario_structure_matches_contribution_contract(self):
         root = Path(__file__).resolve().parents[1]
         self.assertEqual(validate(root), [])

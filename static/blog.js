@@ -3,7 +3,13 @@ const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (char) => ({ "&"
 const APP_PATH_PREFIX = "/who-let-the-agents-act";
 const configuredBasePath = document.querySelector('meta[name="wlaa-base-path"]')?.content || "";
 const APP_BASE_PATH = configuredBasePath || (window.location.pathname === APP_PATH_PREFIX || window.location.pathname.startsWith(`${APP_PATH_PREFIX}/`) ? APP_PATH_PREFIX : "");
-const appUrl = (path) => `${APP_BASE_PATH}${path}`;
+const appUrl = (path) => {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(path)) return path;
+  if (path.startsWith("#")) return `${APP_BASE_PATH}${path}`;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  if (!APP_BASE_PATH || normalizedPath === APP_BASE_PATH || normalizedPath.startsWith(`${APP_BASE_PATH}/`)) return normalizedPath;
+  return `${APP_BASE_PATH}${normalizedPath}`;
+};
 const appLink = (path) => path.startsWith("/") ? appUrl(path) : path;
 const articleSlug = decodeURIComponent(window.location.pathname.replace(new RegExp(`^${APP_BASE_PATH}\/blog\/?`), "").replace(/\/$/, ""));
 document.querySelectorAll("[data-app-path]").forEach((link) => {
