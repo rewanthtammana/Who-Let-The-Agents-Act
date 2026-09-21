@@ -1,5 +1,7 @@
 # Overpowered Data Tool scenario
 
+[Read the Overpowered Data Tool field guide](https://rewanthtammana.com/who-let-the-agents-act/blog/overpowered-data-tool)
+
 Each posture is deliberately isolated so the differences are easy to inspect:
 
 - `modes/vulnerable.py` lets the model choose fields and returns the SQLite tool result directly.
