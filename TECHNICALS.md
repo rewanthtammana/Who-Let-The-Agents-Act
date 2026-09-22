@@ -75,7 +75,7 @@ docker compose up --build -d
 docker compose logs -f who-let-the-agents-act
 ```
 
-Use `docker compose restart` after a runtime change, `docker compose up -d --build` after changing `requirements.txt`, and `docker compose down` to stop the app. To use another host port:
+Python, scenario prompt, configuration, and SQL changes automatically reload the application process. HTML, CSS, and JavaScript changes are served directly from the mounted repository and only require a browser refresh. No container restart is needed for these edits. Use `docker compose up -d --build` after changing `requirements.txt` or the Docker image, and `docker compose down` to stop the app. Set `RELOAD=false` if you need to disable development reloading. To use another host port:
 
 ```bash
 APP_PORT=8001 docker compose up -d

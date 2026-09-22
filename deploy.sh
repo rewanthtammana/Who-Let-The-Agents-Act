@@ -28,6 +28,10 @@ if [[ "${COOKIE_SECURE:-0}" != "1" ]]; then
     fail "Set COOKIE_SECURE=1 because Caddy serves the application over HTTPS."
 fi
 
+# Compose enables source watching for local development by default. Never run
+# the production service with a development reloader.
+export RELOAD=false
+
 echo "Validating Compose configuration..."
 docker compose config -q
 echo "Ensuring persistent Caddy volumes exist..."

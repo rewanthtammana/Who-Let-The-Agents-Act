@@ -7,7 +7,9 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: 8000
-      RELOAD: "false"
+      # Local Compose runs watch the bind-mounted source tree. Production's
+      # deploy.sh explicitly forces this off before starting the stack.
+      RELOAD: ${RELOAD:-true}
       GROQ_API_KEYS: ${GROQ_API_KEYS:-}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}

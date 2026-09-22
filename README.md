@@ -87,7 +87,7 @@ Open <http://127.0.0.1:8000> and choose a scenario, mode, and prompt.
 docker compose up --build -d
 ```
 
-The app is then available at <http://127.0.0.1:8000>. See [TECHNICALS.md](TECHNICALS.md) for deployment, configuration, and verification details.
+The app is then available at <http://127.0.0.1:8000>. Local source changes are picked up automatically: backend and scenario files reload the app process, while frontend files only need a browser refresh. Rebuild the image only when dependencies or the Docker image change. See [TECHNICALS.md](TECHNICALS.md) for deployment, configuration, and verification details.
 
 ## Evidence and verification
 
