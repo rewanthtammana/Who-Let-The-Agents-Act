@@ -1,5 +1,5 @@
 {
-  "dek": "See why tenant filtering must happen before similarity ranking: once a foreign chunk wins retrieval, asking the model to forget it is already too late.",
+  "dek": "A foreign document wins similarity ranking before tenant filtering, and the model receives data it was never authorized to see.",
   "story_heading": "The most similar answer belongs to someone else",
   "story": "You are reviewing a retrieval assistant shared by multiple bank tenants. A semantic query can find a highly similar foreign policy before the system checks who is allowed to see it. Follow the candidate set from the active tenant boundary into model context.",
   "goal": "Use one wire-policy search to prove that tenant authorization must constrain retrieval candidates before similarity ranking, not after the model has seen them.",
@@ -92,7 +92,7 @@
     "The unsafe retriever ranks the shared corpus without first enforcing the active tenant ACL.",
     "A more similar foreign document and its contact data enter model context and are returned."
   ],
-  "prompt_only_failure": "A model guard can be told to stay within Acme Bank, but the retriever-not the guard-selects evidence. A migration pretext can pass the model judgment, leaving the globally ranked tool to cross the tenant boundary.",
+  "prompt_only_failure": "A model guard can be told to stay within Acme Bank, but the retriever, not the guard, selects evidence. A migration pretext can pass the model judgment, leaving the globally ranked tool to cross the tenant boundary.",
   "hardened_controls": [
     {"name": "Admission gate", "detail": "Hardened mode rejects obvious unrelated or override/bulk-access messages before retrieval planning; policy questions still demonstrate tenant pre-filtering."},
     {

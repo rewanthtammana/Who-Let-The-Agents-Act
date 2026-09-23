@@ -1,5 +1,5 @@
 {
-  "dek": "Upload a poisoned invoice, let the agent read it as evidence, and watch untrusted document text attempt to become a payment instruction during post-tool replanning.",
+  "dek": "A poisoned invoice turns vendor-controlled document text into a payment instruction during post-tool replanning.",
   "story_heading": "An invoice that talks back to the agent",
   "story": "You are reviewing an accounts-payable agent that reads uploaded invoices. The user's request is only to summarize a document, but vendor-controlled text can contain instructions aimed at the model. Trace how a harmless request becomes a payment attempt after the first tool observation.",
   "goal": "Use one poisoned invoice to prove that retrieved content is evidence, not authority, and that every payment action must match trusted bank-controlled fields.",

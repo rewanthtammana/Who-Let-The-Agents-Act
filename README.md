@@ -91,7 +91,7 @@ The app is then available at <http://127.0.0.1:8000>. Local source changes are p
 
 ## Evidence and verification
 
-Each run records the important stages in inspectable JSON artifacts under the scenario's generated `_runs/` directory. The UI exposes the trace, controls, evidence, and resulting verdict so the attack path can be compared directly.
+Each run records its model plan, policy decisions, tool calls, database access, and outcome as JSON under the scenario's generated `_runs/` directory. The UI shows the same trace, controls, evidence, and verdict for direct comparison.
 
 Run the static checks and tests with:
 
@@ -116,7 +116,7 @@ python3 scripts/verify_matrix.py
 
 ## References
 
-- [Subhash Dasyam's writing on securing agentic AI architectures 10 part series](https://www.subhashdasyam.com/2025/12/securing-agentic-ai-architecture.html?utm_source=who-let-the-agents-act&utm_medium=referral&utm_campaign=project_references&utm_content=readme)
+- [Subhash Dasyam's 10-part series on securing agentic AI architectures](https://www.subhashdasyam.com/2025/12/securing-agentic-ai-architecture.html?utm_source=who-let-the-agents-act&utm_medium=referral&utm_campaign=project_references&utm_content=readme)
 
 ## License
 

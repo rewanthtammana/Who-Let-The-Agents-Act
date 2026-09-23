@@ -129,7 +129,7 @@ function setScenarioView(focused, scroll = false) {
   if (!focused) {
     $("#scenario-eyebrow").textContent = "WHO LET THE AGENTS ACT · LABS FOR SECURING AI AGENTS";
     $("#title").textContent = "Find the boundary that breaks";
-    $("#summary").textContent = "Explore nine realistic agent-security failures, then compare how prompt instructions, model behavior, and application controls change the outcome.";
+    $("#summary").textContent = "Run nine realistic agent-security failures and compare the same request across vulnerable, prompt-only, and hardened modes.";
     $("#scenario-context").textContent = "";
     $("#severity").classList.add("hidden");
     $("#scenario-select").value = "";

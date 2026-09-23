@@ -1,5 +1,5 @@
 {
-  "dek": "Simulate an authorization timeout and discover how a seemingly sensible availability fallback can quietly turn \"no decision\" into an unauthorized supplier payment.",
+  "dek": "An authorization timeout triggers an availability fallback that treats \"no decision\" as permission to submit a supplier payment.",
   "story_heading": "When the approval answer disappears",
   "story": "You are reviewing a payment agent during an approval-service outage. The payment request itself may be legitimate, but the dependency that should say yes or no has timed out. Follow the failure through the fallback and distinguish availability from authorization.",
   "goal": "Use approved, denied, and timed-out payment requests to prove that missing authorization is never approval, and that safe systems queue or refuse side effects.",
@@ -119,7 +119,7 @@
   ],
   "engineering_notes": [
     "Dependency state, approval rules, payment events, and pending payments are separate scenario tables.",
-    "PAY-3003 provides a healthy-but-denied comparison so the lab distinguishes an explicit rejection from an unavailable approval service.",
+    "PAY-3003 covers a second case: the approval service is healthy, but policy denies the request. This distinguishes an explicit rejection from an unavailable approval service.",
     "A denied healthy decision is blocked; an unavailable decision is queued, preserving both safety and recoverability.",
     "The outage is an explicit lab condition and is not inferred from model output."
   ],

@@ -28,7 +28,7 @@ function canonicalPageUrl(fallbackPath) {
 
 function renderShareMenu({ title, description, path, compact = false }) {
   const url = canonicalPageUrl(path);
-  const xText = `Worth reading: ${title}\n\n${description}\n`;
+  const xText = `${title}\n\n${description}\n`;
   const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&summary=${encodeURIComponent(description)}`;
   const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(xText)}&url=${encodeURIComponent(url)}`;
   return `<details class="share-menu ${compact ? "compact" : ""}">
@@ -78,11 +78,11 @@ function renderIndex(posts) {
         <h1>Where should an agent's authority end?</h1>
       </div>
       <div class="guide-intro">
-        <p>Who Let the Agents Act is a hands-on guide to security failures that appear when models can choose data, tools, targets, and follow-up actions.</p>
-        <p>Each chapter begins with the vulnerable path, tests a prompt-only defense, then moves the boundary into application code where it can be enforced and evidenced.</p>
+        <p>This field guide covers security failures that appear when models can choose data, tools, targets, and follow-up actions.</p>
+        <p>Each chapter runs the vulnerable path, tests a prompt-only defense, and shows the application control and evidence needed to contain the failure.</p>
         <div class="guide-share">${renderShareMenu({
           title: "Who Let the Agents Act",
-          description: "An interactive field guide on agentic AI security, with realistic failure modes and vulnerable vs hardened controls.",
+          description: "Nine agent-security failures with vulnerable, prompt-only, and hardened implementations.",
           path: "/blog",
           compact: true,
         })}</div>
@@ -408,7 +408,7 @@ function renderArticle(post, posts) {
         </section>
 
         ${hasPrimer && post.walkthrough_steps?.length ? `<section id="guided-walkthrough" class="article-section guided-steps">
-          <p class="section-number">GUIDED WALKTHROUGH</p><h2>Move from observation to proof</h2>
+          <p class="section-number">GUIDED WALKTHROUGH</p><h2>Run the attack and inspect the evidence</h2>
           ${renderWalkthroughSteps(post.walkthrough_steps)}
         </section>` : ""}
 

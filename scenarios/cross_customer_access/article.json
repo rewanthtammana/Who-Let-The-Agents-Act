@@ -1,5 +1,5 @@
 {
-  "dek": "Explore an agent-flavored IDOR: the model selects a customer ID, a broad service identity reads it, and the authenticated human quietly disappears from the authorization decision.",
+  "dek": "The model selects a customer ID, a broad service identity reads it, and the authenticated human disappears from the authorization decision. That is an IDOR through an agent.",
   "story_heading": "When the customer disappears from the decision",
   "story": "You are reviewing a support agent acting for a signed-in customer. The request may legitimately read the caller's transactions, but the model can name another customer ID and the backend service can reach it. Trace the moment where a user-controlled identifier is mistaken for authority.",
   "goal": "Use delegated transaction requests across three synthetic customers to show that object-level authorization must bind the authenticated human, session, and requested customer before any database read.",

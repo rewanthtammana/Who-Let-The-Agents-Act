@@ -1,5 +1,5 @@
 {
-  "dek": "Follow a transfer request across an agent boundary and see how excess context, unauthenticated delegation, and borrowed authority turn a helpful router into a data-leaking deputy.",
+  "dek": "An unsafe handoff carries excess context, unauthenticated delegation, and borrowed authority from a support router into a transfer specialist.",
   "story_heading": "A handoff that carries too much trust",
   "story": "You are reviewing a transfer router after it shared more than the receiving specialist needed. The router can see support context, but the specialist should only validate a payment. Follow the handoff across that boundary and separate useful transaction context from secrets and execution authority.",
   "goal": "Use one transfer request to prove why an agent handoff needs authentication, audience binding, minimal typed context, and receiver-side authorization.",

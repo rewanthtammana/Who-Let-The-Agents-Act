@@ -1,5 +1,5 @@
 {
-  "dek": "Watch a poisoned merchant note cross a coordinator, fraud reviewer, and account-control agent-then see where provenance and receiver-side authorization break the chain.",
+  "dek": "A poisoned merchant note crosses a coordinator, fraud reviewer, and account-control agent. The trace shows where provenance and receiver-side authorization stop the chain.",
   "story_heading": "A recommendation that arrives with borrowed authority",
   "story": "You are reviewing a three-agent fraud workflow. The coordinator selects a case, a reviewer interprets evidence, and Account Control can freeze an account. Follow the recommendation across both handoffs and ask whether the final agent can distinguish untrusted evidence from an authorized action.",
   "goal": "Use one fraud case to prove that multi-agent handoffs need typed provenance, least privilege, and independent authorization of both the action and its target.",

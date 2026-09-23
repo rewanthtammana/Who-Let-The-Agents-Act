@@ -1,5 +1,5 @@
 {
-  "dek": "Trace a credential from raw diagnostics into model context and then into a second outbound tool-the propagation path that ordinary response redaction often misses.",
+  "dek": "A credential moves from raw diagnostics into model context and then into a second outbound tool. Ordinary response redaction often misses this propagation path.",
   "story_heading": "A diagnostic report that carries a credential",
   "story": "You are reviewing an operations agent that investigates a failed payment-provider health check. The agent needs useful status fields, not environment secrets. Follow the credential from a raw observation into a report and identify every boundary that must stop it.",
   "goal": "Use one diagnostics request to prove that least-privilege projections and DLP must protect tool results, downstream actions, final responses, and observability.",

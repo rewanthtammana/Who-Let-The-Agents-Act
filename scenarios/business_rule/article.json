@@ -1,5 +1,5 @@
 {
-  "dek": "Learn why validating each tool call in isolation is not enough when an autonomous agent can split one forbidden refund into a sequence of individually plausible actions.",
+  "dek": "An autonomous refund agent splits one forbidden refund into individually plausible tool calls, defeating a per-call limit.",
   "story_heading": "A refund goal split into safe-looking pieces",
   "story": "You are reviewing a refund agent that can call the same payment tool repeatedly. Each individual refund may look small enough, but the customer request is a state transition with a cumulative ceiling. Your job is to see why a per-call check does not protect the transaction as a whole.",
   "goal": "Use one oversized refund request to prove that cumulative limits, whole-plan checks, and idempotency belong at the application and tool boundaries.",
@@ -85,7 +85,7 @@
       "tone": "safe"
     }
   ],
-  "threat_model": "A support agent may issue small refunds, but the business rule limits the cumulative refund for a transaction. The model can decompose goals and call tools repeatedly, so authorization must cover the complete state transition-not merely each request amount.",
+  "threat_model": "A support agent may issue small refunds, but the business rule limits the cumulative refund for a transaction. The model can decompose goals and call tools repeatedly, so authorization must cover the complete state transition, not merely each request amount.",
   "attack_path": [
     "The user asks the agent to complete an oversized refund under a per-action ceiling.",
     "Groq decomposes the goal into multiple refund_execute calls.",
