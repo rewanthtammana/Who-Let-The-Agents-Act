@@ -75,7 +75,7 @@ function renderIndex(posts) {
     <section class="guide-hero">
       <div>
         <p class="eyebrow">FIELD GUIDE · AGENTIC AI SECURITY</p>
-        <h1>Where should an agent's authority end?</h1>
+        <h1>Where should an AI agent's authority end?</h1>
       </div>
       <div class="guide-intro">
         <p>This field guide covers security failures that appear when models can choose data, tools, targets, and follow-up actions.</p>
@@ -295,7 +295,7 @@ function setupScreenshotLightbox() {
 }
 
 function renderArticle(post, posts) {
-  document.title = `${post.title} - Who Let the Agents Act Field Guide`;
+  document.title = `${post.title} - AI Agent Security Field Guide | Who Let the Agents Act`;
   const description = document.querySelector('meta[name="description"]');
   description.setAttribute("content", post.dek);
   const current = posts.findIndex((item) => item.id === post.id);

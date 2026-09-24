@@ -37,9 +37,9 @@ ROOT = Path(__file__).resolve().parent
 PUBLIC_SITE_ROOT = "https://rewanthtammana.com/who-let-the-agents-act"
 PUBLIC_ASSET_ORIGIN = "https://who-let-the-agents-act.rewanthtammana.com"
 PUBLIC_APP_BASE_PATH = os.getenv("PUBLIC_APP_BASE_PATH", "/who-let-the-agents-act")
-APP_STYLESHEET_VERSION = "20260921-funnel4"
-APP_SCRIPT_VERSION = "20260922-copy1"
-BLOG_ASSET_VERSION = "20260922-copy1"
+APP_STYLESHEET_VERSION = "20260924-unified-home1"
+APP_SCRIPT_VERSION = "20260924-home-copy1"
+BLOG_ASSET_VERSION = "20260924-title1"
 SITE_HEADER_ASSET_VERSION = "20260915-unified1"
 GITHUB_CALLOUT_ASSET_VERSION = "20260915-callout6"
 GITHUB_CALLOUT_SCRIPT_VERSION = "20260921-funnel3"
@@ -545,26 +545,31 @@ def render_initial_page(template: str, request: Request, scenario_config: dict[s
     template = render_app_assets(template, request)
     initial_grid = []
     selected_id = scenario_config.get("id") if scenario_config else None
-    for config in sorted((entry[0] for entry in SCENARIOS.values()), key=lambda item: int(item["number"])):
+    ordered_scenarios = sorted(SCENARIOS.items(), key=lambda entry: int(entry[1][0]["number"]))
+    for scenario_id, (config, _, _, _) in ordered_scenarios:
         category = str(config.get("category") or config.get("domain") or "Agent security")
         severity = str(config.get("severity") or "High")
         active = config.get("id") == selected_id
+        slug = scenario_slug(scenario_id)
         initial_grid.append(
-            f'''<button class="scenario-tile{" active" if active else ""}" type="button" role="listitem" data-scenario-id="{html.escape(str(config["slug"]), quote=True)}" aria-pressed="{"true" if active else "false"}">
-      <span class="scenario-tile-top"><small>{int(config["number"]):02d} · {html.escape(category)}</small><span class="scenario-tile-severity severity {html.escape(severity.lower())}">{html.escape(severity.upper())}</span></span>
-      <strong>{html.escape(str(config["title"]))}</strong>
-      <span class="scenario-tile-type">{html.escape(str(config.get("vulnerability_type") or "Agent security scenario"))}</span>
-      <span class="scenario-tile-summary">{html.escape(str(config.get("summary") or "Explore the failure mode and its application boundary."))}</span>
-      <span class="scenario-tile-cta">{"CURRENT SCENARIO" if active else "OPEN SCENARIO →"}</span>
-    </button>'''
+            f'''<article class="boundary-card{" active" if active else ""}" role="listitem">
+      <div class="boundary-card-top"><span>{int(config["number"]):02d} · {html.escape(category)}</span><span class="boundary-card-severity severity {html.escape(severity.lower())}">{html.escape(severity.upper())}</span></div>
+      <h3>{html.escape(str(config["title"]))}</h3>
+      <p class="boundary-card-failure">{html.escape(str(config.get("summary") or "Explore the failure mode and its application boundary."))}</p>
+      <div class="boundary-card-boundary"><span>SECURITY BOUNDARY</span><p>{html.escape(str(config.get("security_boundary") or "Application-enforced authority"))}</p></div>
+      <div class="boundary-card-actions">
+        <a class="boundary-action boundary-action-guide" data-home-path="guide_chapter" data-scenario-id="{html.escape(slug, quote=True)}" href="{html.escape(app_path(request, f"/blog/{slug}"), quote=True)}">READ GUIDE</a>
+        <a class="boundary-action boundary-action-lab" data-home-path="live_lab" data-scenario-id="{html.escape(slug, quote=True)}" href="{html.escape(app_path(request, f"/lab/{slug}"), quote=True)}">RUN LAB <span aria-hidden="true">→</span></a>
+      </div>
+    </article>'''
         )
     template = template.replace("__INITIAL_SCENARIO_GRID__", "".join(initial_grid))
     if scenario_config is None:
         values = {
             "__APP_BODY_CLASS__": "scenario-index-page",
-            "__INITIAL_SCENARIO_EYEBROW__": "WHO LET THE AGENTS ACT · LABS FOR SECURING AI AGENTS",
-            "__INITIAL_TITLE__": "Find the boundary that breaks",
-            "__INITIAL_SUMMARY__": "Explore nine realistic agent-security failures, then compare how prompt instructions, model behavior, and application controls change the outcome.",
+            "__INITIAL_SCENARIO_EYEBROW__": "AI AGENT SECURITY · FIELD GUIDE + HANDS-ON LABS",
+            "__INITIAL_TITLE__": "Where should an AI agent's authority end?",
+            "__INITIAL_SUMMARY__": "Explore nine realistic AI agent security failures. Read the Field Guide or test each one in hands-on labs across vulnerable, prompt-only, and hardened designs.",
             "__INITIAL_SCENARIO_CONTEXT__": "",
             "__INITIAL_SEVERITY_CLASS__": "severity hidden",
             "__INITIAL_SEVERITY__": "",
@@ -616,7 +621,7 @@ def scenario_lab(scenario_name: str, request: Request) -> HTMLResponse:
     vulnerability = str(config["vulnerability_type"])
     return social_page_response(
         "index.html",
-        title=f"{title} - Interactive Agent Security Lab",
+        title=f"{title} - AI Agent Security Lab | Who Let the Agents Act",
         description=str(config["summary"]),
         canonical_url=f"{PUBLIC_SITE_ROOT}/lab/{slug}",
         image_url=scenario_social_image(scenario_id, config, "social-preview.png"),
@@ -666,7 +671,7 @@ def blog_article(scenario_name: str, request: Request) -> HTMLResponse:
     vulnerability = str(post["vulnerability_type"])
     return social_page_response(
         "blog.html",
-        title=f"{title} - Agent Security Field Guide",
+        title=f"{title} - AI Agent Security Field Guide | Who Let the Agents Act",
         description=str(post["summary"]),
         canonical_url=f"{PUBLIC_SITE_ROOT}/blog/{slug}",
         image_url=scenario_social_image(scenario_id, post, "social-preview-blog.png"),

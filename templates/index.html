@@ -14,26 +14,26 @@
     <meta name="wlaa-base-path" content="__APP_BASE_PATH_ATTR__" />
     <link rel="icon" href="__FAVICON_URL__" type="image/svg+xml" />
     <!-- SOCIAL_META_START -->
-    <title>Who Let the Agents Act - Interactive Agent Security Labs</title>
-    <meta name="description" content="Run nine realistic agent-security failures and compare the same request across vulnerable, prompt-only, and hardened modes." />
+    <title>AI Agent Security Labs &amp; Field Guide | Who Let the Agents Act</title>
+    <meta name="description" content="Explore nine AI agent security failures through a practical Field Guide and hands-on labs comparing vulnerable, prompt-only, and hardened designs." />
     <link rel="canonical" href="https://rewanthtammana.com/who-let-the-agents-act/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Who Let the Agents Act" />
     <meta property="og:locale" content="en_US" />
-    <meta property="og:title" content="Who Let the Agents Act - Interactive Agent Security Labs" />
-    <meta property="og:description" content="Find the boundary that breaks. Explore nine realistic agent-security failures and compare defenses in an interactive lab." />
+    <meta property="og:title" content="Who Let the Agents Act: AI Agent Security Labs &amp; Field Guide" />
+    <meta property="og:description" content="Read the Field Guide, run nine realistic AI agent security failures, and compare vulnerable, prompt-only, and hardened defenses." />
     <meta property="og:url" content="https://rewanthtammana.com/who-let-the-agents-act/" />
     <meta property="og:image" content="https://who-let-the-agents-act.rewanthtammana.com/static/social-preview.png" />
     <meta property="og:image:secure_url" content="https://who-let-the-agents-act.rewanthtammana.com/static/social-preview.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Who Let the Agents Act - Find the boundary that breaks" />
+    <meta property="og:image:alt" content="Who Let the Agents Act - hands-on AI agent security labs" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Who Let the Agents Act - Interactive Agent Security Labs" />
-    <meta name="twitter:description" content="Find the boundary that breaks. Explore nine realistic agent-security failures and compare defenses in an interactive lab." />
+    <meta name="twitter:title" content="Who Let the Agents Act: AI Agent Security Labs &amp; Field Guide" />
+    <meta name="twitter:description" content="Read the Field Guide, run nine realistic AI agent security failures, and compare vulnerable, prompt-only, and hardened defenses." />
     <meta name="twitter:image" content="https://who-let-the-agents-act.rewanthtammana.com/static/social-preview.png" />
-    <meta name="twitter:image:alt" content="Who Let the Agents Act - Find the boundary that breaks" />
+    <meta name="twitter:image:alt" content="Who Let the Agents Act - hands-on AI agent security labs" />
     <!-- SOCIAL_META_END -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -61,7 +61,7 @@
     <header class="topbar site-header">
       <a class="brand site-brand" data-app-path="/"><span>WLAA</span><strong>Who Let the Agents Act</strong></a>
       <nav class="site-nav" aria-label="Primary navigation">
-        <a data-app-path="/" aria-current="page">Interactive lab</a>
+        <a data-app-path="/#scenario-library">Live labs</a>
         <a data-app-path="/blog">Field guide</a>
       </nav>
       <a class="github-repo" data-github-location="header" href="https://github.com/rewanthtammana/who-let-the-agents-act" target="_blank" rel="noopener noreferrer" aria-label="rewanthtammana/who-let-the-agents-act on GitHub">
@@ -98,7 +98,7 @@
 
     <main>
       <section class="hero scenario-hero">
-        <div>
+        <div class="hero-copy">
           <p class="eyebrow" id="scenario-eyebrow">__INITIAL_SCENARIO_EYEBROW__</p>
           <h1 id="title">__INITIAL_TITLE__</h1>
           <p id="summary">__INITIAL_SUMMARY__</p>
@@ -107,22 +107,28 @@
         <div class="hero-actions"><button id="scenario-index-toggle" class="secondary hidden" type="button">ALL SCENARIOS</button><span id="severity" class="__INITIAL_SEVERITY_CLASS__">__INITIAL_SEVERITY__</span></div>
       </section>
 
-      <nav class="landing-actions" aria-label="Start exploring the labs">
-        <a class="landing-action landing-action-primary" data-app-path="/lab/overpowered-data-tool">
-          <span>START WITH SCENARIO 01</span><span aria-hidden="true">→</span>
+      <nav class="landing-actions" aria-label="Choose how to explore">
+        <a class="landing-action landing-action-primary" data-app-path="/blog" data-home-path="field_guide">
+          <span>EXPLORE THE FIELD GUIDE</span><span aria-hidden="true">→</span>
         </a>
-        <a class="landing-action landing-action-secondary" href="#scenario-library">
-          <span>OR BROWSE ALL 9 SCENARIOS</span><span aria-hidden="true">↓</span>
+        <a class="landing-action landing-action-secondary" href="#scenario-library" data-home-path="live_labs">
+          <span>OPEN THE LIVE LABS</span><span aria-hidden="true">↓</span>
         </a>
       </nav>
+
+      <section class="home-principles home-only" aria-label="Core principles">
+        <article><span>01</span><div><strong>Let the model plan</strong><p>Natural language becomes structured intent and tool arguments.</p></div></article>
+        <article><span>02</span><div><strong>Keep authority outside it</strong><p>Identity, policy, data scope, and side effects remain deterministic.</p></div></article>
+        <article><span>03</span><div><strong>Preserve the evidence</strong><p>Every meaningful decision remains visible in the trace and run artifacts.</p></div></article>
+      </section>
 
       <section id="scenario-library" class="scenario-library" aria-labelledby="scenario-library-title">
         <div class="section-title scenario-library-title">
           <div>
-            <p class="eyebrow">THE LAB</p>
-            <h2 id="scenario-library-title">Nine ways an agent can cross a boundary</h2>
+            <p class="eyebrow">NINE SECURITY BOUNDARIES</p>
+            <h2 id="scenario-library-title">Read the attack or run the lab</h2>
           </div>
-          <p>Each scenario changes the data, tools, and security boundary while keeping the same comparison workflow.</p>
+          <p>Each scenario pairs a practical Field Guide chapter with a live comparison of vulnerable, prompt-only, and hardened designs.</p>
         </div>
         <div id="scenario-grid" class="scenario-grid" role="list">__INITIAL_SCENARIO_GRID__</div>
       </section>

@@ -111,7 +111,7 @@ function renderScenarioMeta() {
   $("#agentic-mechanism").textContent = scenario.agentic_mechanism || "Model-mediated tool use";
   $("#agent-decision").textContent = scenario.agent_decision || "How to pursue the user's goal";
   $("#security-boundary").textContent = scenario.security_boundary || "Application-enforced policy";
-  document.title = `Who Let the Agents Act - ${scenario.title}`;
+  document.title = `${scenario.title} - AI Agent Security Lab | Who Let the Agents Act`;
   $("#invoice-upload").classList.toggle("hidden", scenario.id !== "indirect-injection");
   $("#dependency-panel").classList.toggle("hidden", scenario.id !== "approval-service-outage");
   $("#reset-scenario").classList.toggle("hidden", !scenario.runtime_reset_available);
@@ -127,14 +127,14 @@ function setScenarioView(focused, scroll = false) {
   $("#scenario-index-toggle").classList.toggle("hidden", !focused);
   renderScenarioLibrary();
   if (!focused) {
-    $("#scenario-eyebrow").textContent = "WHO LET THE AGENTS ACT · LABS FOR SECURING AI AGENTS";
-    $("#title").textContent = "Find the boundary that breaks";
-    $("#summary").textContent = "Run nine realistic agent-security failures and compare the same request across vulnerable, prompt-only, and hardened modes.";
+    $("#scenario-eyebrow").textContent = "AI AGENT SECURITY · FIELD GUIDE + HANDS-ON LABS";
+    $("#title").textContent = "Where should an AI agent's authority end?";
+    $("#summary").textContent = "Explore nine realistic AI agent security failures. Read the Field Guide or test each one in hands-on labs across vulnerable, prompt-only, and hardened designs.";
     $("#scenario-context").textContent = "";
     $("#severity").classList.add("hidden");
     $("#scenario-select").value = "";
     updateLandingDatabaseStatus();
-    document.title = "Who Let the Agents Act - Labs for Securing AI Agents";
+    document.title = "AI Agent Security Labs & Field Guide | Who Let the Agents Act";
   } else {
     $("#severity").classList.remove("hidden");
   }
@@ -149,13 +149,16 @@ function renderScenarioLibrary() {
     const active = document.body.classList.contains("scenario-focused") && item.id === state.scenario?.id;
     const number = String(item.number).padStart(2, "0");
     const category = item.category || item.domain || "Agent security";
-    return `<button class="scenario-tile ${active ? "active" : ""}" type="button" role="listitem" data-scenario-id="${escapeHtml(item.slug)}" aria-pressed="${active}">
-      <span class="scenario-tile-top"><small>${number} · ${escapeHtml(category)}</small><span class="scenario-tile-severity severity ${escapeHtml(String(item.severity || "high").toLowerCase())}">${escapeHtml(String(item.severity || "High").toUpperCase())}</span></span>
-      <strong>${escapeHtml(item.title)}</strong>
-      <span class="scenario-tile-type">${escapeHtml(item.vulnerability_type || "Agent security scenario")}</span>
-      <span class="scenario-tile-summary">${escapeHtml(item.summary || "Explore the failure mode and its application boundary.")}</span>
-      <span class="scenario-tile-cta">${active ? "CURRENT SCENARIO" : "OPEN SCENARIO →"}</span>
-    </button>`;
+    return `<article class="boundary-card ${active ? "active" : ""}" role="listitem">
+      <div class="boundary-card-top"><span>${number} · ${escapeHtml(category)}</span><span class="boundary-card-severity severity ${escapeHtml(String(item.severity || "high").toLowerCase())}">${escapeHtml(String(item.severity || "High").toUpperCase())}</span></div>
+      <h3>${escapeHtml(item.title)}</h3>
+      <p class="boundary-card-failure">${escapeHtml(item.summary || "Explore the failure mode and its application boundary.")}</p>
+      <div class="boundary-card-boundary"><span>SECURITY BOUNDARY</span><p>${escapeHtml(item.security_boundary || "Application-enforced authority")}</p></div>
+      <div class="boundary-card-actions">
+        <a class="boundary-action boundary-action-guide" data-home-path="guide_chapter" data-scenario-id="${escapeHtml(item.slug)}" href="${escapeHtml(appUrl(`/blog/${encodeURIComponent(item.slug)}`))}">READ GUIDE</a>
+        <a class="boundary-action boundary-action-lab" data-home-path="live_lab" data-scenario-id="${escapeHtml(item.slug)}" href="${escapeHtml(appUrl(`/lab/${encodeURIComponent(item.slug)}`))}">RUN LAB <span aria-hidden="true">→</span></a>
+      </div>
+    </article>`;
   }).join("");
 }
 
@@ -684,6 +687,13 @@ function trackTraceOpened() {
 
 document.addEventListener("DOMContentLoaded", () => {
   init().catch((error) => renderError(error.message));
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest("[data-home-path]");
+    if (!link) return;
+    const params = { destination: link.dataset.homePath };
+    if (/^[a-z0-9-]+$/.test(link.dataset.scenarioId || "")) params.scenario_id = link.dataset.scenarioId;
+    trackAnalyticsEvent("home_path_selected", params);
+  });
   document.querySelectorAll(".mode").forEach((button) => button.addEventListener("click", () => {
     const mode = button.dataset.mode;
     const changed = mode !== state.mode;
@@ -700,12 +710,6 @@ document.addEventListener("DOMContentLoaded", () => {
   ["#trace-jump", "#trace-jump-console"].forEach((selector) => $(selector).addEventListener("click", trackTraceOpened));
   document.querySelectorAll("[data-invoice-fixture]").forEach((button) => button.addEventListener("click", () => loadInvoiceFixture(button.dataset.invoiceFixture).catch((error) => { $("#upload-status").textContent = error.message; })));
   document.querySelectorAll("[data-dependency-state]").forEach((button) => button.addEventListener("click", () => setDependencyState(button.dataset.dependencyState)));
-  $("#scenario-grid").addEventListener("click", (event) => {
-    const tile = event.target.closest("[data-scenario-id]");
-    if (!tile) return;
-    $("#scenario-select").value = tile.dataset.scenarioId;
-    switchScenario().catch((error) => renderError(error.message));
-  });
   $("#scenario-index-toggle").addEventListener("click", showScenarioIndex);
   const customTrigger = $("#scenario-select-trigger");
   const customMenu = $("#scenario-select-menu");
