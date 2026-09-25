@@ -103,23 +103,16 @@
           <h1 id="title">__INITIAL_TITLE__</h1>
           <p id="summary">__INITIAL_SUMMARY__</p>
           <p class="scenario-context scenario-detail" id="scenario-context">__INITIAL_SCENARIO_CONTEXT__</p>
+          <nav class="landing-actions" aria-label="Choose how to explore">
+            <a class="landing-action landing-action-primary" data-app-path="/blog" data-home-path="field_guide">
+              <span>EXPLORE THE FIELD GUIDE</span><span aria-hidden="true">→</span>
+            </a>
+            <a class="landing-action landing-action-secondary" href="#scenario-library" data-home-path="live_labs">
+              <span>OPEN THE LIVE LABS</span><span aria-hidden="true">↓</span>
+            </a>
+          </nav>
         </div>
         <div class="hero-actions"><button id="scenario-index-toggle" class="secondary hidden" type="button">ALL SCENARIOS</button><span id="severity" class="__INITIAL_SEVERITY_CLASS__">__INITIAL_SEVERITY__</span></div>
-      </section>
-
-      <nav class="landing-actions" aria-label="Choose how to explore">
-        <a class="landing-action landing-action-primary" data-app-path="/blog" data-home-path="field_guide">
-          <span>EXPLORE THE FIELD GUIDE</span><span aria-hidden="true">→</span>
-        </a>
-        <a class="landing-action landing-action-secondary" href="#scenario-library" data-home-path="live_labs">
-          <span>OPEN THE LIVE LABS</span><span aria-hidden="true">↓</span>
-        </a>
-      </nav>
-
-      <section class="home-principles home-only" aria-label="Core principles">
-        <article><span>01</span><div><strong>Let the model plan</strong><p>Natural language becomes structured intent and tool arguments.</p></div></article>
-        <article><span>02</span><div><strong>Keep authority outside it</strong><p>Identity, policy, data scope, and side effects remain deterministic.</p></div></article>
-        <article><span>03</span><div><strong>Preserve the evidence</strong><p>Every meaningful decision remains visible in the trace and run artifacts.</p></div></article>
       </section>
 
       <section id="scenario-library" class="scenario-library" aria-labelledby="scenario-library-title">

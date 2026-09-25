@@ -128,7 +128,7 @@ function setScenarioView(focused, scroll = false) {
   renderScenarioLibrary();
   if (!focused) {
     $("#scenario-eyebrow").textContent = "AI AGENT SECURITY · FIELD GUIDE + HANDS-ON LABS";
-    $("#title").textContent = "Where should an AI agent's authority end?";
+    $("#title").textContent = "Find the boundary that breaks";
     $("#summary").textContent = "Explore nine realistic AI agent security failures. Read the Field Guide or test each one in hands-on labs across vulnerable, prompt-only, and hardened designs.";
     $("#scenario-context").textContent = "";
     $("#severity").classList.add("hidden");
@@ -150,6 +150,7 @@ function renderScenarioLibrary() {
     const number = String(item.number).padStart(2, "0");
     const category = item.category || item.domain || "Agent security";
     return `<article class="boundary-card ${active ? "active" : ""}" role="listitem">
+      <a class="boundary-card-link" data-home-path="guide_chapter" data-scenario-id="${escapeHtml(item.slug)}" href="${escapeHtml(appUrl(`/blog/${encodeURIComponent(item.slug)}`))}" aria-label="Read the ${escapeHtml(item.title)} Field Guide chapter"></a>
       <div class="boundary-card-top"><span>${number} · ${escapeHtml(category)}</span><span class="boundary-card-severity severity ${escapeHtml(String(item.severity || "high").toLowerCase())}">${escapeHtml(String(item.severity || "High").toUpperCase())}</span></div>
       <h3>${escapeHtml(item.title)}</h3>
       <p class="boundary-card-failure">${escapeHtml(item.summary || "Explore the failure mode and its application boundary.")}</p>

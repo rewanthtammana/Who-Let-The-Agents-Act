@@ -37,8 +37,8 @@ ROOT = Path(__file__).resolve().parent
 PUBLIC_SITE_ROOT = "https://rewanthtammana.com/who-let-the-agents-act"
 PUBLIC_ASSET_ORIGIN = "https://who-let-the-agents-act.rewanthtammana.com"
 PUBLIC_APP_BASE_PATH = os.getenv("PUBLIC_APP_BASE_PATH", "/who-let-the-agents-act")
-APP_STYLESHEET_VERSION = "20260924-unified-home1"
-APP_SCRIPT_VERSION = "20260924-home-copy1"
+APP_STYLESHEET_VERSION = "20260925-home-width1"
+APP_SCRIPT_VERSION = "20260925-card-link1"
 BLOG_ASSET_VERSION = "20260924-title1"
 SITE_HEADER_ASSET_VERSION = "20260915-unified1"
 GITHUB_CALLOUT_ASSET_VERSION = "20260915-callout6"
@@ -553,6 +553,7 @@ def render_initial_page(template: str, request: Request, scenario_config: dict[s
         slug = scenario_slug(scenario_id)
         initial_grid.append(
             f'''<article class="boundary-card{" active" if active else ""}" role="listitem">
+      <a class="boundary-card-link" data-home-path="guide_chapter" data-scenario-id="{html.escape(slug, quote=True)}" href="{html.escape(app_path(request, f"/blog/{slug}"), quote=True)}" aria-label="Read the {html.escape(str(config["title"]), quote=True)} Field Guide chapter"></a>
       <div class="boundary-card-top"><span>{int(config["number"]):02d} · {html.escape(category)}</span><span class="boundary-card-severity severity {html.escape(severity.lower())}">{html.escape(severity.upper())}</span></div>
       <h3>{html.escape(str(config["title"]))}</h3>
       <p class="boundary-card-failure">{html.escape(str(config.get("summary") or "Explore the failure mode and its application boundary."))}</p>
@@ -568,7 +569,7 @@ def render_initial_page(template: str, request: Request, scenario_config: dict[s
         values = {
             "__APP_BODY_CLASS__": "scenario-index-page",
             "__INITIAL_SCENARIO_EYEBROW__": "AI AGENT SECURITY · FIELD GUIDE + HANDS-ON LABS",
-            "__INITIAL_TITLE__": "Where should an AI agent's authority end?",
+            "__INITIAL_TITLE__": "Find the boundary that breaks",
             "__INITIAL_SUMMARY__": "Explore nine realistic AI agent security failures. Read the Field Guide or test each one in hands-on labs across vulnerable, prompt-only, and hardened designs.",
             "__INITIAL_SCENARIO_CONTEXT__": "",
             "__INITIAL_SEVERITY_CLASS__": "severity hidden",
